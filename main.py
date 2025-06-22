@@ -382,6 +382,9 @@ class MainWindow(QMainWindow):
         widgets.btn_theme.clicked.connect(self.buttonClick)
         widgets.btn_exit.clicked.connect(self.buttonClick)
 
+        # Home page buttons
+        widgets.start_chat_button.clicked.connect(self.startChatFromHome)
+
         # AI chat function buttons
         widgets.sendButton.clicked.connect(self.sendMessage)
         widgets.clearChatButton.clicked.connect(self.clearChat)
@@ -446,6 +449,20 @@ class MainWindow(QMainWindow):
         widgets.btn_ai_chat.setStyleSheet(UIFunctions.selectMenu(widgets.btn_ai_chat.styleSheet()))
 
         widgets.textEdit.setPlainText("")
+
+    def startChatFromHome(self):
+        """从主页跳转到对话页面"""
+        # 切换到AI聊天页面
+        widgets.stackedWidget.setCurrentWidget(widgets.ai_chat)
+
+        # 重置所有按钮样式并选中AI聊天按钮
+        UIFunctions.resetStyle(self, "btn_ai_chat")
+        widgets.btn_ai_chat.setStyleSheet(UIFunctions.selectMenu(widgets.btn_ai_chat.styleSheet()))
+
+        # 聚焦到输入框
+        widgets.chatInputArea.setFocus()
+
+        print("Started conversation from home page")
 
     def updateUITexts(self):
         """Update UI texts to English"""

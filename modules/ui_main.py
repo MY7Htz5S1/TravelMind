@@ -1142,11 +1142,134 @@ class Ui_MainWindow(object):
         self.stackedWidget.setStyleSheet(u"background: transparent;")
 
         # 主页
+        # self.home = QWidget()
+        # self.home.setObjectName(u"home")
+        # self.home.setStyleSheet(u"background-image: url(:/images/images/images/PyDracula_vertical.png);\n"
+        #                         "background-position: center;\n"
+        #                         "background-repeat: no-repeat;")
+        # self.stackedWidget.addWidget(self.home)
+
         self.home = QWidget()
         self.home.setObjectName(u"home")
-        self.home.setStyleSheet(u"background-image: url(:/images/images/images/PyDracula_vertical.png);\n"
-                                "background-position: center;\n"
-                                "background-repeat: no-repeat;")
+        # 移除背景图片，使用纯色背景
+        self.home.setStyleSheet(u"""
+            QWidget#home {
+                background-color: rgb(40, 44, 52);
+            }
+        """)
+
+        # 创建主页的布局 - 确保有足够空间
+        self.home_layout = QVBoxLayout(self.home)
+        self.home_layout.setSpacing(25)  # 适中的间距
+        self.home_layout.setObjectName(u"home_layout")
+        self.home_layout.setContentsMargins(30, 30, 30, 30)  # 适当边距
+
+        # 添加弹簧到顶部
+        self.home_top_spacer = QSpacerItem(20, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.home_layout.addItem(self.home_top_spacer)
+
+        # 欢迎标题 - 修复行高问题
+        self.welcome_title = QLabel(self.home)
+        self.welcome_title.setObjectName(u"welcome_title")
+        self.welcome_title.setAlignment(Qt.AlignCenter)
+        self.welcome_title.setMinimumHeight(80)  # 确保足够高度
+        self.welcome_title.setStyleSheet(u"""
+            QLabel {
+                color: rgb(189, 147, 249);
+                font-family: "Segoe UI";
+                font-size: 36px;
+                font-weight: bold;
+                padding: 15px;
+            }
+        """)
+        self.welcome_title.setText("🌍 Welcome to TravelMind")
+
+        self.home_layout.addWidget(self.welcome_title)
+
+        # 副标题 - 修复行高问题
+        self.welcome_subtitle = QLabel(self.home)
+        self.welcome_subtitle.setObjectName(u"welcome_subtitle")
+        self.welcome_subtitle.setAlignment(Qt.AlignCenter)
+        self.welcome_subtitle.setMinimumHeight(50)  # 确保足够高度
+        self.welcome_subtitle.setStyleSheet(u"""
+            QLabel {
+                color: rgb(221, 221, 221);
+                font-family: "Segoe UI";
+                font-size: 18px;
+                font-weight: normal;
+                padding: 10px;
+            }
+        """)
+        self.welcome_subtitle.setText("Your AI-powered travel planning assistant")
+
+        self.home_layout.addWidget(self.welcome_subtitle)
+
+        # 功能介绍 - 修复行高和确保完整显示
+        self.features_text = QLabel(self.home)
+        self.features_text.setObjectName(u"features_text")
+        self.features_text.setAlignment(Qt.AlignCenter)
+        self.features_text.setWordWrap(True)
+        self.features_text.setMinimumHeight(200)  # 确保足够高度显示所有文字
+        self.features_text.setStyleSheet(u"""
+            QLabel {
+                color: rgb(189, 189, 189);
+                font-family: "Segoe UI";
+                font-size: 16px;
+                font-weight: normal;
+                padding: 15px;
+            }
+        """)
+        # 使用HTML格式来更好地控制行间距
+        self.features_text.setText(
+            "<div style='line-height: 1.8;'>"
+            "✈️ Plan your perfect trip<br><br>"
+            "🗺️ Get route recommendations<br><br>"
+            "🏨 Find attractions and accommodations<br><br>"
+            "🌤️ Check weather information<br><br>"
+            "💡 Receive personalized travel advice"
+            "</div>"
+        )
+
+        self.home_layout.addWidget(self.features_text)
+
+        # 开始对话按钮 - 合适尺寸和CSS样式
+        self.start_chat_button = QPushButton(self.home)
+        self.start_chat_button.setObjectName(u"start_chat_button")
+        self.start_chat_button.setText("Start Conversation")
+        self.start_chat_button.setMinimumSize(QSize(280, 60))  # 适中的按钮大小
+        self.start_chat_button.setMaximumSize(QSize(320, 60))
+        self.start_chat_button.setCursor(QCursor(Qt.PointingHandCursor))
+        self.start_chat_button.setStyleSheet(u"""
+            QPushButton {
+                background-color: rgb(189, 147, 249);
+                border: none;
+                border-radius: 30px;
+                padding: 18px 25px;
+                color: white;
+                font-family: "Segoe UI";
+                font-size: 16px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: rgb(196, 161, 249);
+            }
+            QPushButton:pressed {
+                background-color: rgb(180, 141, 238);
+            }
+        """)
+
+        # 创建水平布局来居中按钮
+        self.button_layout = QHBoxLayout()
+        self.button_layout.addItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+        self.button_layout.addWidget(self.start_chat_button)
+        self.button_layout.addItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+
+        self.home_layout.addLayout(self.button_layout)
+
+        # 添加弹簧到底部
+        self.home_bottom_spacer = QSpacerItem(20, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.home_layout.addItem(self.home_bottom_spacer)
+
         self.stackedWidget.addWidget(self.home)
 
         # 添加AI聊天页面
