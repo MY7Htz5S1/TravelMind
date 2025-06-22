@@ -376,9 +376,9 @@ class MainWindow(QMainWindow):
         widgets.btn_home.clicked.connect(self.buttonClick)
         widgets.btn_ai_chat.clicked.connect(self.buttonClick)
         widgets.btn_history.clicked.connect(self.buttonClick)
-        widgets.btn_widgets.clicked.connect(self.buttonClick)
-        widgets.btn_new.clicked.connect(self.buttonClick)
-        widgets.btn_save.clicked.connect(self.buttonClick)
+        # widgets.btn_widgets.clicked.connect(self.buttonClick)
+        # widgets.btn_new.clicked.connect(self.buttonClick)
+        # widgets.btn_save.clicked.connect(self.buttonClick)
         widgets.btn_theme.clicked.connect(self.buttonClick)
         widgets.btn_exit.clicked.connect(self.buttonClick)
 
@@ -849,24 +849,24 @@ class MainWindow(QMainWindow):
             self.loadHistoryList()
 
         # SHOW WIDGETS PAGE
-        if btnName == "btn_widgets":
-            widgets.stackedWidget.setCurrentWidget(widgets.widgets)
-            UIFunctions.resetStyle(self, btnName)
-            btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))
+        # if btnName == "btn_widgets":
+        #     widgets.stackedWidget.setCurrentWidget(widgets.widgets)
+        #     UIFunctions.resetStyle(self, btnName)
+        #     btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))
 
         # SHOW NEW PAGE
-        if btnName == "btn_new":
-            widgets.stackedWidget.setCurrentWidget(widgets.new_page)  # SET PAGE
-            UIFunctions.resetStyle(self, btnName)  # RESET ANOTHERS BUTTONS SELECTED
-            btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))  # SELECT MENU
+        # if btnName == "btn_new":
+        #     widgets.stackedWidget.setCurrentWidget(widgets.new_page)  # SET PAGE
+        #     UIFunctions.resetStyle(self, btnName)  # RESET ANOTHERS BUTTONS SELECTED
+        #     btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))  # SELECT MENU
 
-        if btnName == "btn_save":
-            # 手动保存当前对话
-            if self.chat_history:
-                self.autoSaveCurrentChat()
-                QMessageBox.information(self, "保存成功", "当前对话已保存到历史记录")
-            else:
-                QMessageBox.information(self, "提示", "当前没有对话内容可以保存")
+        # if btnName == "btn_save":
+        #     # 手动保存当前对话
+        #     if self.chat_history:
+        #         self.autoSaveCurrentChat()
+        #         QMessageBox.information(self, "保存成功", "当前对话已保存到历史记录")
+        #     else:
+        #         QMessageBox.information(self, "提示", "当前没有对话内容可以保存")
 
         if btnName == "btn_theme":
             if self.useCustomTheme:
