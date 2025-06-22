@@ -28,12 +28,18 @@ class ChatHistoryItem(QListWidgetItem):
 
         # Create display text
         timestamp = datetime.fromisoformat(chat_data['timestamp']).strftime("%Y-%m-%d %H:%M")
-        first_message = chat_data['messages'][0]['content'] if chat_data['messages'] else "Empty chat"
-        # Truncate long messages
-        if len(first_message) > 50:
-            first_message = first_message[:50] + "..."
 
-        display_text = f"[{timestamp}] {first_message}"
+        # Use custom title if available, otherwise use first message
+        if chat_data.get('title'):
+            display_title = chat_data['title']
+        else:
+            first_message = chat_data['messages'][0]['content'] if chat_data['messages'] else "Empty chat"
+            # Truncate long messages
+            if len(first_message) > 50:
+                first_message = first_message[:50] + "..."
+            display_title = first_message
+
+        display_text = f"[{timestamp}] {display_title}"
         self.setText(display_text)
 
         # Set tooltip with more details
@@ -223,7 +229,7 @@ class AIResponseThread(QThread):
 
 
 class ChatHistoryManager:
-    """Manage chat history storage and retrieval"""
+    """Manage chat history storage and retrieval with auto-save support"""
 
     def __init__(self):
         self.history_file = "chat_history.json"
@@ -235,10 +241,10 @@ class ChatHistoryManager:
             with open(self.history_file, 'w', encoding='utf-8') as f:
                 json.dump([], f)
 
-    def save_chat(self, chat_history):
-        """Save a chat session to history"""
+    def save_or_update_chat(self, chat_history, session_id=None, title=None):
+        """Save new chat or update existing chat session"""
         if not chat_history:  # Don't save empty chats
-            return
+            return None
 
         try:
             # Load existing history
@@ -247,10 +253,26 @@ class ChatHistoryManager:
         except:
             history = []
 
-        # Create new chat record
+        # If session_id provided, try to update existing session
+        if session_id:
+            for i, chat_record in enumerate(history):
+                if chat_record.get('id') == session_id:
+                    # Update existing session
+                    history[i]['messages'] = chat_history.copy()
+                    history[i]['last_updated'] = datetime.now().isoformat()
+
+                    # Save back to file
+                    with open(self.history_file, 'w', encoding='utf-8') as f:
+                        json.dump(history, f, ensure_ascii=False, indent=2)
+                    return session_id
+
+        # Create new session
+        new_session_id = str(int(time.time() * 1000))
         chat_record = {
-            'id': str(int(time.time() * 1000)),  # Unique ID based on timestamp
+            'id': new_session_id,
             'timestamp': datetime.now().isoformat(),
+            'last_updated': datetime.now().isoformat(),
+            'title': title,
             'messages': chat_history.copy()
         }
 
@@ -263,6 +285,8 @@ class ChatHistoryManager:
         # Save back to file
         with open(self.history_file, 'w', encoding='utf-8') as f:
             json.dump(history, f, ensure_ascii=False, indent=2)
+
+        return new_session_id
 
     def load_history(self):
         """Load all chat history"""
@@ -310,6 +334,10 @@ class MainWindow(QMainWindow):
         self.ai_thread = None
         self.current_ai_message = None  # Track current streaming message
         self.cursor_timer = None  # Timer for blinking cursor
+
+        # Session management for auto-save
+        self.current_session_id = None  # Track current chat session
+        self.auto_save_enabled = True  # Enable auto-save by default
 
         # History manager
         self.history_manager = ChatHistoryManager()
@@ -425,7 +453,7 @@ class MainWindow(QMainWindow):
         widgets.chat_title.setText("🤖 TravelMind AI Assistant")
 
         # Clear chat button
-        widgets.clearChatButton.setText("Clear Chat")
+        widgets.clearChatButton.setText("New Chat")  # 改为更合适的文字
 
         # Send button
         widgets.sendButton.setText("Send")
@@ -445,6 +473,34 @@ class MainWindow(QMainWindow):
         for i, btn in enumerate(widgets.suggestion_buttons):
             if i < len(suggestions):
                 btn.setText(suggestions[i])
+
+    def startNewChat(self):
+        """Start a new chat session"""
+        # Save current chat if it has content
+        if self.chat_history and self.auto_save_enabled:
+            self.current_session_id = self.history_manager.save_or_update_chat(
+                self.chat_history, self.current_session_id
+            )
+
+        # Reset for new chat
+        self.chat_history = []
+        self.current_session_id = None
+
+        # Clear UI
+        self.clearChatUI()
+
+        # Refresh history list
+        self.loadHistoryList()
+
+    def autoSaveCurrentChat(self):
+        """Automatically save/update current chat session"""
+        if self.chat_history and self.auto_save_enabled:
+            self.current_session_id = self.history_manager.save_or_update_chat(
+                self.chat_history, self.current_session_id
+            )
+
+            # Refresh history list in background (don't disturb current conversation)
+            QTimer.singleShot(100, self.loadHistoryList)
 
     def loadHistoryList(self):
         """Load chat history into the list widget"""
@@ -476,14 +532,17 @@ class MainWindow(QMainWindow):
         if not isinstance(item, ChatHistoryItem):
             return
 
-        # Clear current chat
-        self.clearChat()
+        # Save current chat first if needed
+        if self.chat_history and self.auto_save_enabled:
+            self.autoSaveCurrentChat()
 
         # Load chat messages
         chat_data = item.chat_data
         self.chat_history = chat_data['messages'].copy()
+        self.current_session_id = chat_data['id']  # Set session ID to existing chat
 
-        # Display messages in chat area
+        # Clear and display messages in chat area
+        self.clearChatUI()
         for message in self.chat_history:
             is_user = message['role'] == 'user'
             self.addChatMessage(message['content'], is_user=is_user)
@@ -513,6 +572,10 @@ class MainWindow(QMainWindow):
         )
 
         if reply == QMessageBox.Yes:
+            # If deleting current session, reset session ID
+            if self.current_session_id == item.chat_data['id']:
+                self.current_session_id = None
+
             # Delete from history file
             self.history_manager.delete_chat(item.chat_data['id'])
 
@@ -531,6 +594,7 @@ class MainWindow(QMainWindow):
 
         if reply == QMessageBox.Yes:
             self.history_manager.clear_all_history()
+            self.current_session_id = None  # Reset current session
             self.loadHistoryList()
 
     def eventFilter(self, obj, event):
@@ -641,6 +705,9 @@ class MainWindow(QMainWindow):
         if self.current_ai_message:
             self.chat_history.append({"role": "assistant", "content": self.current_ai_message.current_text})
 
+        # 🔥 AUTO-SAVE: 每次AI回复完成后自动保存
+        self.autoSaveCurrentChat()
+
         # Restore send button
         widgets.sendButton.setEnabled(True)
         widgets.sendButton.setText("Send")
@@ -684,13 +751,12 @@ class MainWindow(QMainWindow):
         self.sendMessage()
 
     def clearChat(self):
-        """Clear chat history"""
-        # Save current chat to history if it has messages
-        if len(self.chat_history) > 0:
-            self.history_manager.save_chat(self.chat_history)
-            # Reload history list to show the saved chat
-            self.loadHistoryList()
+        """Clear chat and start new session"""
+        # This now acts as "New Chat" button
+        self.startNewChat()
 
+    def clearChatUI(self):
+        """Clear only the chat UI, not the data"""
         # Stop any ongoing streaming
         if self.ai_thread and self.ai_thread.isRunning():
             self.ai_thread.cancel()
@@ -701,8 +767,7 @@ class MainWindow(QMainWindow):
         # Stop cursor timer
         self.stopCursorBlink()
 
-        # Clear chat history
-        self.chat_history = []
+        # Clear current message reference
         self.current_ai_message = None
 
         # Clear messages from UI (except welcome message and spacer)
@@ -796,8 +861,12 @@ class MainWindow(QMainWindow):
             btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))  # SELECT MENU
 
         if btnName == "btn_save":
-            print("Save BTN clicked!")
-            QMessageBox.information(self, "Warning", "Function not implemented", QMessageBox.Yes)
+            # 手动保存当前对话
+            if self.chat_history:
+                self.autoSaveCurrentChat()
+                QMessageBox.information(self, "保存成功", "当前对话已保存到历史记录")
+            else:
+                QMessageBox.information(self, "提示", "当前没有对话内容可以保存")
 
         if btnName == "btn_theme":
             if self.useCustomTheme:
@@ -814,6 +883,9 @@ class MainWindow(QMainWindow):
                 self.useCustomTheme = True
 
         if btnName == "btn_exit":
+            # 退出前保存当前对话
+            if self.chat_history and self.auto_save_enabled:
+                self.autoSaveCurrentChat()
             print("Exit BTN clicked!")
             QApplication.quit()
             return
@@ -838,6 +910,13 @@ class MainWindow(QMainWindow):
             print('Mouse click: LEFT CLICK')
         if event.buttons() == Qt.RightButton:
             print('Mouse click: RIGHT CLICK')
+
+    def closeEvent(self, event):
+        """Handle application close event"""
+        # Save current chat before closing
+        if self.chat_history and self.auto_save_enabled:
+            self.autoSaveCurrentChat()
+        event.accept()
 
 
 if __name__ == "__main__":
