@@ -2,6 +2,7 @@ import sys
 import os
 import platform
 import time
+import json
 from datetime import datetime
 from os.path import abspath
 
@@ -16,6 +17,29 @@ os.environ["QT_FONT_DPI"] = "96"  # FIX Problem for High DPI and Scale above 100
 # SET AS GLOBAL WIDGETS
 # ///////////////////////////////////////////////////////////////
 widgets = None
+
+
+class ChatHistoryItem(QListWidgetItem):
+    """Custom history item with chat data"""
+
+    def __init__(self, chat_data, parent=None):
+        super().__init__(parent)
+        self.chat_data = chat_data
+
+        # Create display text
+        timestamp = datetime.fromisoformat(chat_data['timestamp']).strftime("%Y-%m-%d %H:%M")
+        first_message = chat_data['messages'][0]['content'] if chat_data['messages'] else "Empty chat"
+        # Truncate long messages
+        if len(first_message) > 50:
+            first_message = first_message[:50] + "..."
+
+        display_text = f"[{timestamp}] {first_message}"
+        self.setText(display_text)
+
+        # Set tooltip with more details
+        message_count = len([msg for msg in chat_data['messages'] if msg['role'] == 'user'])
+        tooltip = f"Time: {timestamp}\nMessages: {message_count}\nFirst message: {chat_data['messages'][0]['content'] if chat_data['messages'] else 'None'}"
+        self.setToolTip(tooltip)
 
 
 class StreamingChatMessage(QFrame):
@@ -198,6 +222,77 @@ class AIResponseThread(QThread):
         self.is_cancelled = True
 
 
+class ChatHistoryManager:
+    """Manage chat history storage and retrieval"""
+
+    def __init__(self):
+        self.history_file = "chat_history.json"
+        self.ensure_history_file()
+
+    def ensure_history_file(self):
+        """Ensure history file exists"""
+        if not os.path.exists(self.history_file):
+            with open(self.history_file, 'w', encoding='utf-8') as f:
+                json.dump([], f)
+
+    def save_chat(self, chat_history):
+        """Save a chat session to history"""
+        if not chat_history:  # Don't save empty chats
+            return
+
+        try:
+            # Load existing history
+            with open(self.history_file, 'r', encoding='utf-8') as f:
+                history = json.load(f)
+        except:
+            history = []
+
+        # Create new chat record
+        chat_record = {
+            'id': str(int(time.time() * 1000)),  # Unique ID based on timestamp
+            'timestamp': datetime.now().isoformat(),
+            'messages': chat_history.copy()
+        }
+
+        # Add to beginning of history (most recent first)
+        history.insert(0, chat_record)
+
+        # Keep only last 50 chats
+        history = history[:50]
+
+        # Save back to file
+        with open(self.history_file, 'w', encoding='utf-8') as f:
+            json.dump(history, f, ensure_ascii=False, indent=2)
+
+    def load_history(self):
+        """Load all chat history"""
+        try:
+            with open(self.history_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except:
+            return []
+
+    def delete_chat(self, chat_id):
+        """Delete a specific chat from history"""
+        try:
+            with open(self.history_file, 'r', encoding='utf-8') as f:
+                history = json.load(f)
+        except:
+            return
+
+        # Remove chat with matching ID
+        history = [chat for chat in history if chat.get('id') != chat_id]
+
+        # Save back to file
+        with open(self.history_file, 'w', encoding='utf-8') as f:
+            json.dump(history, f, ensure_ascii=False, indent=2)
+
+    def clear_all_history(self):
+        """Clear all chat history"""
+        with open(self.history_file, 'w', encoding='utf-8') as f:
+            json.dump([], f)
+
+
 class MainWindow(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
@@ -215,6 +310,9 @@ class MainWindow(QMainWindow):
         self.ai_thread = None
         self.current_ai_message = None  # Track current streaming message
         self.cursor_timer = None  # Timer for blinking cursor
+
+        # History manager
+        self.history_manager = ChatHistoryManager()
 
         # USE CUSTOM TITLE BAR | USE AS "False" FOR MAC OR LINUX
         # ///////////////////////////////////////////////////////////////
@@ -249,6 +347,7 @@ class MainWindow(QMainWindow):
         # LEFT MENUS
         widgets.btn_home.clicked.connect(self.buttonClick)
         widgets.btn_ai_chat.clicked.connect(self.buttonClick)
+        widgets.btn_history.clicked.connect(self.buttonClick)
         widgets.btn_widgets.clicked.connect(self.buttonClick)
         widgets.btn_new.clicked.connect(self.buttonClick)
         widgets.btn_save.clicked.connect(self.buttonClick)
@@ -259,12 +358,20 @@ class MainWindow(QMainWindow):
         widgets.sendButton.clicked.connect(self.sendMessage)
         widgets.clearChatButton.clicked.connect(self.clearChat)
 
+        # History page buttons
+        widgets.loadChatButton.clicked.connect(self.loadSelectedChat)
+        widgets.deleteChatButton.clicked.connect(self.deleteSelectedChat)
+        widgets.clearHistoryButton.clicked.connect(self.clearAllHistory)
+
         # Input box enter to send
         widgets.chatInputArea.installEventFilter(self)
 
         # Quick suggestion buttons
         for btn in widgets.suggestion_buttons:
             btn.clicked.connect(lambda checked, button=btn: self.sendSuggestion(button.text()))
+
+        # History list selection change
+        widgets.historyList.itemSelectionChanged.connect(self.onHistorySelectionChanged)
 
         # EXTRA LEFT BOX
         def openCloseLeftBox():
@@ -278,6 +385,9 @@ class MainWindow(QMainWindow):
             UIFunctions.toggleRightBox(self, True)
 
         widgets.settingsTopBtn.clicked.connect(openCloseRightBox)
+
+        # Load history on startup
+        self.loadHistoryList()
 
         # SHOW APP
         # ///////////////////////////////////////////////////////////////
@@ -335,6 +445,93 @@ class MainWindow(QMainWindow):
         for i, btn in enumerate(widgets.suggestion_buttons):
             if i < len(suggestions):
                 btn.setText(suggestions[i])
+
+    def loadHistoryList(self):
+        """Load chat history into the list widget"""
+        widgets.historyList.clear()
+        history = self.history_manager.load_history()
+
+        for chat_data in history:
+            item = ChatHistoryItem(chat_data)
+            widgets.historyList.addItem(item)
+
+        # Update button states
+        self.onHistorySelectionChanged()
+
+    def onHistorySelectionChanged(self):
+        """Handle history list selection change"""
+        selected_items = widgets.historyList.selectedItems()
+        has_selection = len(selected_items) > 0
+
+        widgets.loadChatButton.setEnabled(has_selection)
+        widgets.deleteChatButton.setEnabled(has_selection)
+
+    def loadSelectedChat(self):
+        """Load the selected chat into the AI chat page"""
+        selected_items = widgets.historyList.selectedItems()
+        if not selected_items:
+            return
+
+        item = selected_items[0]
+        if not isinstance(item, ChatHistoryItem):
+            return
+
+        # Clear current chat
+        self.clearChat()
+
+        # Load chat messages
+        chat_data = item.chat_data
+        self.chat_history = chat_data['messages'].copy()
+
+        # Display messages in chat area
+        for message in self.chat_history:
+            is_user = message['role'] == 'user'
+            self.addChatMessage(message['content'], is_user=is_user)
+
+        # Switch to AI chat page
+        widgets.stackedWidget.setCurrentWidget(widgets.ai_chat)
+        UIFunctions.resetStyle(self, "btn_ai_chat")
+        widgets.btn_ai_chat.setStyleSheet(UIFunctions.selectMenu(widgets.btn_ai_chat.styleSheet()))
+
+    def deleteSelectedChat(self):
+        """Delete the selected chat from history"""
+        selected_items = widgets.historyList.selectedItems()
+        if not selected_items:
+            return
+
+        item = selected_items[0]
+        if not isinstance(item, ChatHistoryItem):
+            return
+
+        # Confirm deletion
+        reply = QMessageBox.question(
+            self,
+            "Delete Chat",
+            "Are you sure you want to delete this chat?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+
+        if reply == QMessageBox.Yes:
+            # Delete from history file
+            self.history_manager.delete_chat(item.chat_data['id'])
+
+            # Reload history list
+            self.loadHistoryList()
+
+    def clearAllHistory(self):
+        """Clear all chat history"""
+        reply = QMessageBox.question(
+            self,
+            "Clear All History",
+            "Are you sure you want to delete all chat history? This action cannot be undone.",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+
+        if reply == QMessageBox.Yes:
+            self.history_manager.clear_all_history()
+            self.loadHistoryList()
 
     def eventFilter(self, obj, event):
         """Event filter to handle enter key in input box"""
@@ -488,6 +685,12 @@ class MainWindow(QMainWindow):
 
     def clearChat(self):
         """Clear chat history"""
+        # Save current chat to history if it has messages
+        if len(self.chat_history) > 0:
+            self.history_manager.save_chat(self.chat_history)
+            # Reload history list to show the saved chat
+            self.loadHistoryList()
+
         # Stop any ongoing streaming
         if self.ai_thread and self.ai_thread.isRunning():
             self.ai_thread.cancel()
@@ -571,6 +774,14 @@ class MainWindow(QMainWindow):
             widgets.stackedWidget.setCurrentWidget(widgets.ai_chat)
             UIFunctions.resetStyle(self, btnName)
             btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))
+
+        # SHOW HISTORY PAGE
+        if btnName == "btn_history":
+            widgets.stackedWidget.setCurrentWidget(widgets.history)
+            UIFunctions.resetStyle(self, btnName)
+            btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))
+            # Refresh history list when showing the page
+            self.loadHistoryList()
 
         # SHOW WIDGETS PAGE
         if btnName == "btn_widgets":

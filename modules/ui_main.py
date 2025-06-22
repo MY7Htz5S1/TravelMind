@@ -622,6 +622,29 @@ class Ui_MainWindow(object):
             "    margin-right: 20%;\n"
             "}\n"
             "\n"
+            "/* History Chat List Styles */\n"
+            "#historyList {\n"
+            "    background-color: rgb(33, 37, 43);\n"
+            "    border: 1px solid rgb(44, 49, 58);\n"
+            "    border-radius: 8px;\n"
+            "}\n"
+            "\n"
+            "#historyList::item {\n"
+            "    background-color: transparent;\n"
+            "    border: none;\n"
+            "    padding: 8px;\n"
+            "    border-bottom: 1px solid rgb(44, 49, 58);\n"
+            "}\n"
+            "\n"
+            "#historyList::item:hover {\n"
+            "    background-color: rgb(40, 44, 52);\n"
+            "}\n"
+            "\n"
+            "#historyList::item:selected {\n"
+            "    background-color: rgb(189, 147, 249);\n"
+            "    color: white;\n"
+            "}\n"
+            "\n"
             "")
         self.appMargins = QVBoxLayout(self.styleSheet)
         self.appMargins.setSpacing(0)
@@ -749,6 +772,19 @@ class Ui_MainWindow(object):
         self.btn_ai_chat.setStyleSheet(u"background-image: url(:/icons/images/icons/cil-chat-bubble.png);")
 
         self.verticalLayout_8.addWidget(self.btn_ai_chat)
+
+        # 添加历史对话按钮
+        self.btn_history = QPushButton(self.topMenu)
+        self.btn_history.setObjectName(u"btn_history")
+        sizePolicy.setHeightForWidth(self.btn_history.sizePolicy().hasHeightForWidth())
+        self.btn_history.setSizePolicy(sizePolicy)
+        self.btn_history.setMinimumSize(QSize(0, 45))
+        self.btn_history.setFont(font)
+        self.btn_history.setCursor(QCursor(Qt.PointingHandCursor))
+        self.btn_history.setLayoutDirection(Qt.LeftToRight)
+        self.btn_history.setStyleSheet(u"background-image: url(:/icons/images/icons/cil-history.png);")
+
+        self.verticalLayout_8.addWidget(self.btn_history)
 
         self.btn_widgets = QPushButton(self.topMenu)
         self.btn_widgets.setObjectName(u"btn_widgets")
@@ -1104,6 +1140,8 @@ class Ui_MainWindow(object):
         self.stackedWidget = QStackedWidget(self.pagesContainer)
         self.stackedWidget.setObjectName(u"stackedWidget")
         self.stackedWidget.setStyleSheet(u"background: transparent;")
+
+        # 主页
         self.home = QWidget()
         self.home.setObjectName(u"home")
         self.home.setStyleSheet(u"background-image: url(:/images/images/images/PyDracula_vertical.png);\n"
@@ -1149,7 +1187,7 @@ class Ui_MainWindow(object):
         # 清除聊天按钮
         self.clearChatButton = QPushButton(self.chat_header)
         self.clearChatButton.setObjectName(u"clearChatButton")
-        self.clearChatButton.setText("清除对话")
+        self.clearChatButton.setText("Clear Chat")
         self.clearChatButton.setMinimumSize(QSize(80, 30))
         self.clearChatButton.setMaximumSize(QSize(100, 30))
         self.clearChatButton.setCursor(QCursor(Qt.PointingHandCursor))
@@ -1190,7 +1228,9 @@ class Ui_MainWindow(object):
             }
         """)
         self.welcome_message.setText(
-            "👋 欢迎使用TravelMind AI助手！\n\n我可以帮您规划旅行路线、推荐景点、查询天气信息等。\n请在下方输入您的问题开始对话。")
+            "👋 Welcome to TravelMind AI Assistant!\n\n"
+            "I can help you plan travel routes, recommend attractions, check weather information, and more.\n"
+            "Please enter your question below to start a conversation.")
 
         self.chatContentLayout.addWidget(self.welcome_message)
 
@@ -1221,7 +1261,8 @@ class Ui_MainWindow(object):
         self.chatInputArea.setObjectName(u"chatInputArea")
         self.chatInputArea.setMaximumSize(QSize(16777215, 80))
         self.chatInputArea.setMinimumSize(QSize(0, 80))
-        self.chatInputArea.setPlaceholderText("请输入您的旅行问题，例如：推荐上海3日游路线...")
+        self.chatInputArea.setPlaceholderText(
+            "Please enter your travel question, e.g.: Recommend a 3-day Shanghai tour...")
         self.chatInputArea.setFrameShape(QFrame.NoFrame)
 
         self.input_horizontal_layout.addWidget(self.chatInputArea)
@@ -1229,7 +1270,7 @@ class Ui_MainWindow(object):
         # 发送按钮
         self.sendButton = QPushButton(self.chat_input_frame)
         self.sendButton.setObjectName(u"sendButton")
-        self.sendButton.setText("发送")
+        self.sendButton.setText("Send")
         self.sendButton.setMinimumSize(QSize(80, 80))
         self.sendButton.setMaximumSize(QSize(80, 80))
         self.sendButton.setCursor(QCursor(Qt.PointingHandCursor))
@@ -1247,7 +1288,7 @@ class Ui_MainWindow(object):
         self.suggestions_layout.setSpacing(10)
 
         # 建议按钮
-        suggestions = ["上海3日游", "厦门美食推荐", "北京亲子游", "成都周末游"]
+        suggestions = ["Shanghai 3-day tour", "Xiamen food guide", "Beijing family trip", "Chengdu weekend tour"]
         self.suggestion_buttons = []
 
         for suggestion in suggestions:
@@ -1285,6 +1326,137 @@ class Ui_MainWindow(object):
 
         self.stackedWidget.addWidget(self.ai_chat)
 
+        # 添加历史对话页面
+        self.history = QWidget()
+        self.history.setObjectName(u"history")
+        self.history_layout = QVBoxLayout(self.history)
+        self.history_layout.setSpacing(10)
+        self.history_layout.setObjectName(u"history_layout")
+        self.history_layout.setContentsMargins(20, 20, 20, 20)
+
+        # 历史对话标题和控制区域
+        self.history_header = QFrame(self.history)
+        self.history_header.setObjectName(u"history_header")
+        self.history_header.setMaximumSize(QSize(16777215, 60))
+        self.history_header.setFrameShape(QFrame.NoFrame)
+        self.history_header.setFrameShadow(QFrame.Raised)
+        self.history_header_layout = QHBoxLayout(self.history_header)
+        self.history_header_layout.setObjectName(u"history_header_layout")
+        self.history_header_layout.setContentsMargins(0, 0, 0, 10)
+
+        # 标题
+        self.history_title = QLabel(self.history_header)
+        self.history_title.setObjectName(u"history_title")
+        self.history_title.setFont(font_title)
+        self.history_title.setStyleSheet(u"color: rgb(189, 147, 249);")
+        self.history_title.setText("📚 Chat History")
+
+        self.history_header_layout.addWidget(self.history_title)
+
+        # 弹簧
+        self.history_header_spacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.history_header_layout.addItem(self.history_header_spacer)
+
+        # 清除历史按钮
+        self.clearHistoryButton = QPushButton(self.history_header)
+        self.clearHistoryButton.setObjectName(u"clearHistoryButton")
+        self.clearHistoryButton.setText("Clear All")
+        self.clearHistoryButton.setMinimumSize(QSize(80, 30))
+        self.clearHistoryButton.setMaximumSize(QSize(100, 30))
+        self.clearHistoryButton.setCursor(QCursor(Qt.PointingHandCursor))
+
+        self.history_header_layout.addWidget(self.clearHistoryButton)
+
+        self.history_layout.addWidget(self.history_header)
+
+        # 历史对话列表
+        self.historyList = QListWidget(self.history)
+        self.historyList.setObjectName(u"historyList")
+        self.historyList.setFrameShape(QFrame.NoFrame)
+        self.historyList.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.historyList.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+
+        self.history_layout.addWidget(self.historyList)
+
+        # 操作按钮区域
+        self.history_buttons_frame = QFrame(self.history)
+        self.history_buttons_frame.setObjectName(u"history_buttons_frame")
+        self.history_buttons_frame.setMaximumSize(QSize(16777215, 50))
+        self.history_buttons_frame.setFrameShape(QFrame.NoFrame)
+        self.history_buttons_frame.setFrameShadow(QFrame.Raised)
+        self.history_buttons_layout = QHBoxLayout(self.history_buttons_frame)
+        self.history_buttons_layout.setObjectName(u"history_buttons_layout")
+        self.history_buttons_layout.setContentsMargins(0, 10, 0, 0)
+
+        # 加载对话按钮
+        self.loadChatButton = QPushButton(self.history_buttons_frame)
+        self.loadChatButton.setObjectName(u"loadChatButton")
+        self.loadChatButton.setText("Load Chat")
+        self.loadChatButton.setMinimumSize(QSize(100, 35))
+        self.loadChatButton.setMaximumSize(QSize(120, 35))
+        self.loadChatButton.setCursor(QCursor(Qt.PointingHandCursor))
+        self.loadChatButton.setStyleSheet(u"""
+            QPushButton {
+                background-color: rgb(189, 147, 249);
+                border: none;
+                border-radius: 6px;
+                padding: 8px 16px;
+                color: white;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: rgb(196, 161, 249);
+            }
+            QPushButton:pressed {
+                background-color: rgb(180, 141, 238);
+            }
+            QPushButton:disabled {
+                background-color: rgb(100, 100, 100);
+                color: rgb(150, 150, 150);
+            }
+        """)
+
+        self.history_buttons_layout.addWidget(self.loadChatButton)
+
+        # 弹簧
+        self.history_buttons_spacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.history_buttons_layout.addItem(self.history_buttons_spacer)
+
+        # 删除对话按钮
+        self.deleteChatButton = QPushButton(self.history_buttons_frame)
+        self.deleteChatButton.setObjectName(u"deleteChatButton")
+        self.deleteChatButton.setText("Delete")
+        self.deleteChatButton.setMinimumSize(QSize(80, 35))
+        self.deleteChatButton.setMaximumSize(QSize(100, 35))
+        self.deleteChatButton.setCursor(QCursor(Qt.PointingHandCursor))
+        self.deleteChatButton.setStyleSheet(u"""
+            QPushButton {
+                background-color: rgb(231, 76, 60);
+                border: none;
+                border-radius: 6px;
+                padding: 8px 16px;
+                color: white;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: rgb(241, 86, 70);
+            }
+            QPushButton:pressed {
+                background-color: rgb(221, 66, 50);
+            }
+            QPushButton:disabled {
+                background-color: rgb(100, 100, 100);
+                color: rgb(150, 150, 150);
+            }
+        """)
+
+        self.history_buttons_layout.addWidget(self.deleteChatButton)
+
+        self.history_layout.addWidget(self.history_buttons_frame)
+
+        self.stackedWidget.addWidget(self.history)
+
+        # Widgets页面
         self.widgets = QWidget()
         self.widgets.setObjectName(u"widgets")
         self.widgets.setStyleSheet(u"b")
@@ -1610,6 +1782,8 @@ class Ui_MainWindow(object):
         self.verticalLayout.addWidget(self.row_3)
 
         self.stackedWidget.addWidget(self.widgets)
+
+        # New page
         self.new_page = QWidget()
         self.new_page.setObjectName(u"new_page")
         self.verticalLayout_20 = QVBoxLayout(self.new_page)
@@ -1767,6 +1941,7 @@ class Ui_MainWindow(object):
         self.toggleButton.setText(QCoreApplication.translate("MainWindow", u"Hide", None))
         self.btn_home.setText(QCoreApplication.translate("MainWindow", u"Home", None))
         self.btn_ai_chat.setText(QCoreApplication.translate("MainWindow", u"AI Chat", None))
+        self.btn_history.setText(QCoreApplication.translate("MainWindow", u"History", None))
         self.btn_widgets.setText(QCoreApplication.translate("MainWindow", u"Widgets", None))
         self.btn_new.setText(QCoreApplication.translate("MainWindow", u"New", None))
         self.btn_save.setText(QCoreApplication.translate("MainWindow", u"Save", None))
@@ -1887,4 +2062,4 @@ class Ui_MainWindow(object):
         self.btn_logout.setText(QCoreApplication.translate("MainWindow", u"Logout", None))
         self.creditsLabel.setText(QCoreApplication.translate("MainWindow", u"By: JunyanChen", None))
         self.version.setText(QCoreApplication.translate("MainWindow", u"v1.0.0", None))
-        # retranslateUi10)
+        # retranslateUi
