@@ -405,17 +405,17 @@ class MainWindow(QMainWindow):
         widgets.historyList.itemSelectionChanged.connect(self.onHistorySelectionChanged)
 
         # EXTRA LEFT BOX
-        def openCloseLeftBox():
-            UIFunctions.toggleLeftBox(self, True)
+        # def openCloseLeftBox():
+        #     UIFunctions.toggleLeftBox(self, True)
 
-        widgets.toggleLeftBox.clicked.connect(openCloseLeftBox)
-        widgets.extraCloseColumnBtn.clicked.connect(openCloseLeftBox)
+        # widgets.toggleLeftBox.clicked.connect(openCloseLeftBox)
+        # widgets.extraCloseColumnBtn.clicked.connect(openCloseLeftBox)
 
         # EXTRA RIGHT BOX
-        def openCloseRightBox():
-            UIFunctions.toggleRightBox(self, True)
+        # def openCloseRightBox():
+        #     UIFunctions.toggleRightBox(self, True)
 
-        widgets.settingsTopBtn.clicked.connect(openCloseRightBox)
+        # widgets.settingsTopBtn.clicked.connect(openCloseRightBox)
 
         # Load history on startup
         self.loadHistoryList()
@@ -445,8 +445,8 @@ class MainWindow(QMainWindow):
 
         # SET HOME PAGE AND SELECT MENU
         # ///////////////////////////////////////////////////////////////
-        widgets.stackedWidget.setCurrentWidget(widgets.ai_chat)  # Default to AI chat page
-        widgets.btn_ai_chat.setStyleSheet(UIFunctions.selectMenu(widgets.btn_ai_chat.styleSheet()))
+        widgets.stackedWidget.setCurrentWidget(widgets.home)
+        widgets.btn_home.setStyleSheet(UIFunctions.selectMenu(widgets.btn_home.styleSheet()))
 
         widgets.textEdit.setPlainText("")
 

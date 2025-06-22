@@ -836,27 +836,27 @@ class Ui_MainWindow(object):
 
         self.verticalMenuLayout.addWidget(self.topMenu, 0, Qt.AlignTop)
 
-        self.bottomMenu = QFrame(self.leftMenuFrame)
-        self.bottomMenu.setObjectName(u"bottomMenu")
-        self.bottomMenu.setFrameShape(QFrame.NoFrame)
-        self.bottomMenu.setFrameShadow(QFrame.Raised)
-        self.verticalLayout_9 = QVBoxLayout(self.bottomMenu)
-        self.verticalLayout_9.setSpacing(0)
-        self.verticalLayout_9.setObjectName(u"verticalLayout_9")
-        self.verticalLayout_9.setContentsMargins(0, 0, 0, 0)
-        self.toggleLeftBox = QPushButton(self.bottomMenu)
-        self.toggleLeftBox.setObjectName(u"toggleLeftBox")
-        sizePolicy.setHeightForWidth(self.toggleLeftBox.sizePolicy().hasHeightForWidth())
-        self.toggleLeftBox.setSizePolicy(sizePolicy)
-        self.toggleLeftBox.setMinimumSize(QSize(0, 45))
-        self.toggleLeftBox.setFont(font)
-        self.toggleLeftBox.setCursor(QCursor(Qt.PointingHandCursor))
-        self.toggleLeftBox.setLayoutDirection(Qt.LeftToRight)
-        self.toggleLeftBox.setStyleSheet(u"background-image: url(:/icons/images/icons/icon_settings.png);")
-
-        self.verticalLayout_9.addWidget(self.toggleLeftBox)
-
-        self.verticalMenuLayout.addWidget(self.bottomMenu, 0, Qt.AlignBottom)
+        # self.bottomMenu = QFrame(self.leftMenuFrame)
+        # self.bottomMenu.setObjectName(u"bottomMenu")
+        # self.bottomMenu.setFrameShape(QFrame.NoFrame)
+        # self.bottomMenu.setFrameShadow(QFrame.Raised)
+        # self.verticalLayout_9 = QVBoxLayout(self.bottomMenu)
+        # self.verticalLayout_9.setSpacing(0)
+        # self.verticalLayout_9.setObjectName(u"verticalLayout_9")
+        # self.verticalLayout_9.setContentsMargins(0, 0, 0, 0)
+        # self.toggleLeftBox = QPushButton(self.bottomMenu)
+        # self.toggleLeftBox.setObjectName(u"toggleLeftBox")
+        # sizePolicy.setHeightForWidth(self.toggleLeftBox.sizePolicy().hasHeightForWidth())
+        # self.toggleLeftBox.setSizePolicy(sizePolicy)
+        # self.toggleLeftBox.setMinimumSize(QSize(0, 45))
+        # self.toggleLeftBox.setFont(font)
+        # self.toggleLeftBox.setCursor(QCursor(Qt.PointingHandCursor))
+        # self.toggleLeftBox.setLayoutDirection(Qt.LeftToRight)
+        # self.toggleLeftBox.setStyleSheet(u"background-image: url(:/icons/images/icons/icon_settings.png);")
+        #
+        # self.verticalLayout_9.addWidget(self.toggleLeftBox)
+        #
+        # self.verticalMenuLayout.addWidget(self.bottomMenu, 0, Qt.AlignBottom)
 
         self.verticalLayout_3.addWidget(self.leftMenuFrame)
 
@@ -1055,17 +1055,17 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.setSpacing(5)
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
         self.horizontalLayout_2.setContentsMargins(0, 0, 0, 0)
-        self.settingsTopBtn = QPushButton(self.rightButtons)
-        self.settingsTopBtn.setObjectName(u"settingsTopBtn")
-        self.settingsTopBtn.setMinimumSize(QSize(28, 28))
-        self.settingsTopBtn.setMaximumSize(QSize(28, 28))
-        self.settingsTopBtn.setCursor(QCursor(Qt.PointingHandCursor))
-        icon1 = QIcon()
-        icon1.addFile(u":/icons/images/icons/icon_settings.png", QSize(), QIcon.Normal, QIcon.Off)
-        self.settingsTopBtn.setIcon(icon1)
-        self.settingsTopBtn.setIconSize(QSize(20, 20))
-
-        self.horizontalLayout_2.addWidget(self.settingsTopBtn)
+        # self.settingsTopBtn = QPushButton(self.rightButtons)
+        # self.settingsTopBtn.setObjectName(u"settingsTopBtn")
+        # self.settingsTopBtn.setMinimumSize(QSize(28, 28))
+        # self.settingsTopBtn.setMaximumSize(QSize(28, 28))
+        # self.settingsTopBtn.setCursor(QCursor(Qt.PointingHandCursor))
+        # icon1 = QIcon()
+        # icon1.addFile(u":/icons/images/icons/icon_settings.png", QSize(), QIcon.Normal, QIcon.Off)
+        # self.settingsTopBtn.setIcon(icon1)
+        # self.settingsTopBtn.setIconSize(QSize(20, 20))
+        #
+        # self.horizontalLayout_2.addWidget(self.settingsTopBtn)
 
         self.minimizeAppBtn = QPushButton(self.rightButtons)
         self.minimizeAppBtn.setObjectName(u"minimizeAppBtn")
@@ -1310,10 +1310,28 @@ class Ui_MainWindow(object):
         # 清除聊天按钮
         self.clearChatButton = QPushButton(self.chat_header)
         self.clearChatButton.setObjectName(u"clearChatButton")
-        self.clearChatButton.setText("Clear Chat")
+        self.clearChatButton.setText("New Chat")
         self.clearChatButton.setMinimumSize(QSize(80, 30))
         self.clearChatButton.setMaximumSize(QSize(100, 30))
         self.clearChatButton.setCursor(QCursor(Qt.PointingHandCursor))
+        self.clearChatButton.setStyleSheet(u"""
+            QPushButton {
+                background-color: rgb(100, 120, 140);
+                border: 1px solid rgb(120, 140, 160);
+                border-radius: 6px;
+                padding: 6px 12px;
+                color: white;
+                font-weight: bold;
+                font-size: 12px;
+            }
+            QPushButton:hover {
+                background-color: rgb(120, 140, 160);
+                border: 1px solid rgb(140, 160, 180);
+            }
+            QPushButton:pressed {
+                background-color: rgb(80, 100, 120);
+            }
+        """)
 
         self.chat_header_layout.addWidget(self.clearChatButton)
 
@@ -1397,6 +1415,27 @@ class Ui_MainWindow(object):
         self.sendButton.setMinimumSize(QSize(80, 80))
         self.sendButton.setMaximumSize(QSize(80, 80))
         self.sendButton.setCursor(QCursor(Qt.PointingHandCursor))
+        self.sendButton.setStyleSheet(u"""
+            QPushButton {
+                background-color: rgb(189, 147, 249);
+                border: none;
+                border-radius: 8px;
+                padding: 8px 16px;
+                color: white;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            QPushButton:hover {
+                background-color: rgb(196, 161, 249);
+            }
+            QPushButton:pressed {
+                background-color: rgb(180, 141, 238);
+            }
+            QPushButton:disabled {
+                background-color: rgb(100, 100, 100);
+                color: rgb(150, 150, 150);
+            }
+        """)
         icon_send = QIcon()
         icon_send.addFile(u":/icons/images/icons/cil-send.png", QSize(), QIcon.Normal, QIcon.Off)
         self.sendButton.setIcon(icon_send)
@@ -1417,8 +1456,8 @@ class Ui_MainWindow(object):
         for suggestion in suggestions:
             btn = QPushButton(suggestion)
             btn.setObjectName(f"suggestion_{suggestion}")
-            btn.setMaximumSize(QSize(120, 30))
-            btn.setMinimumSize(QSize(100, 30))
+            btn.setMaximumSize(QSize(160, 30))
+            btn.setMinimumSize(QSize(140, 30))
             btn.setCursor(QCursor(Qt.PointingHandCursor))
             btn.setStyleSheet(u"""
                 QPushButton {
@@ -1487,6 +1526,23 @@ class Ui_MainWindow(object):
         self.clearHistoryButton.setMinimumSize(QSize(80, 30))
         self.clearHistoryButton.setMaximumSize(QSize(100, 30))
         self.clearHistoryButton.setCursor(QCursor(Qt.PointingHandCursor))
+        self.clearHistoryButton.setStyleSheet(u"""
+            QPushButton {
+                background-color: rgb(231, 76, 60);
+                border: none;
+                border-radius: 6px;
+                padding: 6px 12px;
+                color: white;
+                font-weight: bold;
+                font-size: 12px;
+            }
+            QPushButton:hover {
+                background-color: rgb(241, 86, 70);
+            }
+            QPushButton:pressed {
+                background-color: rgb(221, 66, 50);
+            }
+        """)
 
         self.history_header_layout.addWidget(self.clearHistoryButton)
 
@@ -2069,7 +2125,7 @@ class Ui_MainWindow(object):
         # self.btn_new.setText(QCoreApplication.translate("MainWindow", u"New", None))
         # self.btn_save.setText(QCoreApplication.translate("MainWindow", u"Save", None))
         self.btn_exit.setText(QCoreApplication.translate("MainWindow", u"Exit", None))
-        self.toggleLeftBox.setText(QCoreApplication.translate("MainWindow", u"Settings", None))
+        # self.toggleLeftBox.setText(QCoreApplication.translate("MainWindow", u"Settings", None))
         self.extraLabel.setText(QCoreApplication.translate("MainWindow", u"Settings", None))
         # if QT_CONFIG(tooltip)
         self.extraCloseColumnBtn.setToolTip(QCoreApplication.translate("MainWindow", u"Close Settings", None))
@@ -2098,9 +2154,9 @@ class Ui_MainWindow(object):
             QCoreApplication.translate("MainWindow", u"TravelMind - AI智能旅行助手",
                                        None))
         # if QT_CONFIG(tooltip)
-        self.settingsTopBtn.setToolTip(QCoreApplication.translate("MainWindow", u"Settings", None))
+        # self.settingsTopBtn.setToolTip(QCoreApplication.translate("MainWindow", u"Settings", None))
         # endif // QT_CONFIG(tooltip)
-        self.settingsTopBtn.setText("")
+        # self.settingsTopBtn.setText("")
         # if QT_CONFIG(tooltip)
         self.minimizeAppBtn.setToolTip(QCoreApplication.translate("MainWindow", u"Minimize", None))
         # endif // QT_CONFIG(tooltip)
