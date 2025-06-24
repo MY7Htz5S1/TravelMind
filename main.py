@@ -9,6 +9,13 @@ import requests
 import json
 from sseclient import SSEClient
 
+# 新增：语音和图片处理相关导入
+import base64
+import tempfile
+import speech_recognition as sr
+import whisper
+from PIL import Image
+
 # IMPORT / GUI AND MODULES AND WIDGETS
 # ///////////////////////////////////////////////////////////////
 from modules import *
@@ -207,7 +214,7 @@ class TypingIndicator(QFrame):
 
 
 class DifyAPIClient:
-    """Dify API客户端"""
+    """增强版 Dify API客户端 - 支持图片上传"""
 
     def __init__(self, api_key, base_url="https://api.dify.ai/v1"):
         self.api_key = api_key
@@ -217,8 +224,36 @@ class DifyAPIClient:
             "Content-Type": "application/json"
         }
 
-    def chat_completion_stream(self, message, conversation_id=None, user_id="default"):
-        """流式对话完成"""
+    def upload_file(self, file_path):
+        """上传文件到Dify"""
+        try:
+            with open(file_path, 'rb') as f:
+                files = {
+                    'file': (os.path.basename(file_path), f, 'image/jpeg')
+                }
+                headers = {
+                    "Authorization": f"Bearer {self.api_key}"
+                }
+
+                response = requests.post(
+                    f"{self.base_url}/files/upload",
+                    headers=headers,
+                    files=files
+                )
+
+                if response.status_code == 200:
+                    file_data = response.json()
+                    return file_data.get('id')
+                else:
+                    print(f"文件上传失败: {response.text}")
+                    return None
+
+        except Exception as e:
+            print(f"文件上传错误: {e}")
+            return None
+
+    def chat_with_image(self, message, image_path=None, conversation_id=None, user_id="default"):
+        """发送带图片的消息给Dify"""
         url = f"{self.base_url}/chat-messages"
 
         data = {
@@ -227,6 +262,13 @@ class DifyAPIClient:
             "response_mode": "streaming",
             "user": user_id
         }
+
+        if image_path and os.path.exists(image_path):
+            file_id = self.upload_file(image_path)
+            if file_id:
+                data["files"] = [{"type": "image", "transfer_method": "remote_url", "url": file_id}]
+            else:
+                print("图片上传失败，仅发送文字消息")
 
         if conversation_id:
             data["conversation_id"] = conversation_id
@@ -243,6 +285,89 @@ class DifyAPIClient:
             return response
         except requests.exceptions.RequestException as e:
             raise Exception(f"API请求失败: {str(e)}")
+
+    def chat_completion_stream(self, message, conversation_id=None, user_id="default"):
+        """流式对话完成（保持向后兼容）"""
+        return self.chat_with_image(message, None, conversation_id, user_id)
+
+
+class SimpleVoiceThread(QThread):
+    """简单的语音识别线程"""
+    voice_result = Signal(str)
+    voice_error = Signal(str)
+
+    def __init__(self):
+        super().__init__()
+        self.is_recording = False
+
+        # 初始化语音识别
+        self.recognizer = sr.Recognizer()
+        self.microphone = sr.Microphone()
+
+        # 初始化Whisper
+        try:
+            print("正在加载Whisper模型...")
+            self.whisper_model = whisper.load_model("base")
+            print("✅ Whisper模型加载完成")
+        except Exception as e:
+            print(f"❌ Whisper加载失败: {e}")
+            self.whisper_model = None
+
+        # 调整环境噪音
+        try:
+            with self.microphone as source:
+                self.recognizer.adjust_for_ambient_noise(source, duration=1)
+        except Exception as e:
+            print(f"麦克风初始化警告: {e}")
+
+    def start_recording(self):
+        self.is_recording = True
+        self.start()
+
+    def stop_recording(self):
+        self.is_recording = False
+
+    def run(self):
+        try:
+            print("🎤 开始录音...")
+
+            with self.microphone as source:
+                audio = self.recognizer.listen(source, timeout=10, phrase_time_limit=30)
+
+            if not self.is_recording:
+                return
+
+            print("🔄 正在识别语音...")
+            text = self.recognize_with_whisper(audio)
+
+            if text and text.strip():
+                self.voice_result.emit(text.strip())
+            else:
+                self.voice_error.emit("未识别到有效语音")
+
+        except Exception as e:
+            self.voice_error.emit(f"语音识别失败: {str(e)}")
+
+    def recognize_with_whisper(self, audio):
+        try:
+            if self.whisper_model:
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp_file:
+                    tmp_filename = tmp_file.name
+                    with open(tmp_filename, "wb") as f:
+                        f.write(audio.get_wav_data())
+
+                result = self.whisper_model.transcribe(tmp_filename, language="zh")
+                os.unlink(tmp_filename)
+                return result["text"]
+            else:
+                return self.recognizer.recognize_google(audio, language="zh-CN")
+
+        except Exception as e:
+            print(f"Whisper识别错误: {e}")
+            try:
+                return self.recognizer.recognize_google(audio, language="zh-CN")
+            except:
+                raise Exception("所有识别方法都失败了")
 
 
 class APIConfig:
@@ -270,21 +395,21 @@ class APIConfig:
             json.dump(config, f, ensure_ascii=False, indent=2)
 
 
-class AIResponseThread(QThread):
-    """使用Dify API的AI响应线程（支持流式输出）"""
-    response_chunk = Signal(str)  # 发送每个字符
-    response_complete = Signal(str)  # 完成时发送conversation_id
-    error_occurred = Signal(str)  # 错误信号
+class EnhancedAIResponseThread(QThread):
+    """支持图片的AI响应线程"""
+    response_chunk = Signal(str)
+    response_complete = Signal(str)
+    error_occurred = Signal(str)
 
-    def __init__(self, message, api_key=None, conversation_id=None, stream=True):
+    def __init__(self, message, api_key=None, image_path=None, conversation_id=None, stream=True):
         super().__init__()
         self.message = message
         self.api_key = api_key
+        self.image_path = image_path
         self.conversation_id = conversation_id
         self.stream = stream
         self.is_cancelled = False
 
-        # 如果没有API密钥，使用测试模式
         if not api_key:
             self.test_mode = True
         else:
@@ -303,9 +428,10 @@ class AIResponseThread(QThread):
             self.error_occurred.emit(str(e))
 
     def _handle_test_response(self):
-        """测试模式响应"""
         time.sleep(0.5)
-        response = "这是一个测试回复。请在设置中配置Dify API密钥以获得真正的AI回复。"
+        response = f"这是测试回复。收到消息: {self.message}"
+        if self.image_path:
+            response += "\n我看到您上传了一张图片，但测试模式无法分析图片内容。"
 
         for char in response:
             if self.is_cancelled:
@@ -317,10 +443,10 @@ class AIResponseThread(QThread):
             self.response_complete.emit("")
 
     def _handle_streaming_response(self):
-        """处理流式响应"""
         try:
-            response = self.client.chat_completion_stream(
+            response = self.client.chat_with_image(
                 self.message,
+                self.image_path,
                 self.conversation_id
             )
 
@@ -362,10 +488,8 @@ class AIResponseThread(QThread):
             self.error_occurred.emit(f"API调用错误: {str(e)}")
 
     def _handle_blocking_response(self):
-        """处理阻塞式响应（回退方案）"""
         try:
             result = self.client.chat_completion(self.message, self.conversation_id)
-
             content = result.get("answer", "抱歉，我现在无法回答您的问题。")
             conversation_id = result.get("conversation_id", "")
 
@@ -400,30 +524,25 @@ class ChatHistoryManager:
 
     def save_or_update_chat(self, chat_history, session_id=None, title=None):
         """Save new chat or update existing chat session"""
-        if not chat_history:  # Don't save empty chats
+        if not chat_history:
             return None
 
         try:
-            # Load existing history
             with open(self.history_file, 'r', encoding='utf-8') as f:
                 history = json.load(f)
         except:
             history = []
 
-        # If session_id provided, try to update existing session
         if session_id:
             for i, chat_record in enumerate(history):
                 if chat_record.get('id') == session_id:
-                    # Update existing session
                     history[i]['messages'] = chat_history.copy()
                     history[i]['last_updated'] = datetime.now().isoformat()
 
-                    # Save back to file
                     with open(self.history_file, 'w', encoding='utf-8') as f:
                         json.dump(history, f, ensure_ascii=False, indent=2)
                     return session_id
 
-        # Create new session
         new_session_id = str(int(time.time() * 1000))
         chat_record = {
             'id': new_session_id,
@@ -433,13 +552,9 @@ class ChatHistoryManager:
             'messages': chat_history.copy()
         }
 
-        # Add to beginning of history (most recent first)
         history.insert(0, chat_record)
-
-        # Keep only last 50 chats
         history = history[:50]
 
-        # Save back to file
         with open(self.history_file, 'w', encoding='utf-8') as f:
             json.dump(history, f, ensure_ascii=False, indent=2)
 
@@ -461,10 +576,8 @@ class ChatHistoryManager:
         except:
             return
 
-        # Remove chat with matching ID
         history = [chat for chat in history if chat.get('id') != chat_id]
 
-        # Save back to file
         with open(self.history_file, 'w', encoding='utf-8') as f:
             json.dump(history, f, ensure_ascii=False, indent=2)
 
@@ -472,6 +585,25 @@ class ChatHistoryManager:
         """Clear all chat history"""
         with open(self.history_file, 'w', encoding='utf-8') as f:
             json.dump([], f)
+
+
+def process_uploaded_image(image_path):
+    """处理上传的图片"""
+    try:
+        with Image.open(image_path) as img:
+            print(f"图片信息: {img.size}, {img.mode}")
+
+            if img.size[0] > 1024 or img.size[1] > 1024:
+                img.thumbnail((1024, 1024), Image.Resampling.LANCZOS)
+                compressed_path = image_path.replace('.', '_compressed.')
+                img.save(compressed_path, "JPEG", quality=85)
+                return compressed_path
+
+            return image_path
+
+    except Exception as e:
+        print(f"图片处理失败: {e}")
+        return image_path
 
 
 class MainWindow(QMainWindow):
@@ -489,15 +621,20 @@ class MainWindow(QMainWindow):
         self.chat_history = []
         self.typing_indicator = None
         self.ai_thread = None
-        self.current_ai_message = None  # Track current streaming message
-        self.cursor_timer = None  # Timer for blinking cursor
+        self.current_ai_message = None
+        self.cursor_timer = None
 
         # Session management for auto-save
-        self.current_session_id = None  # Track current chat session
-        self.auto_save_enabled = True  # Enable auto-save by default
+        self.current_session_id = None
+        self.auto_save_enabled = True
 
         # History manager
         self.history_manager = ChatHistoryManager()
+
+        # 新增：语音和图片相关变量
+        self.voice_thread = None
+        self.is_voice_recording = False
+        self.current_image_path = None
 
         # USE CUSTOM TITLE BAR | USE AS "False" FOR MAC OR LINUX
         # ///////////////////////////////////////////////////////////////
@@ -507,7 +644,6 @@ class MainWindow(QMainWindow):
         # ///////////////////////////////////////////////////////////////
         title = "TravelMind"
         description = "TravelMind - AI Travel Assistant"
-        # APPLY TEXTS
         self.setWindowTitle(title)
         widgets.titleRightInfo.setText(description)
 
@@ -528,14 +664,9 @@ class MainWindow(QMainWindow):
 
         # BUTTONS CLICK
         # ///////////////////////////////////////////////////////////////
-
-        # LEFT MENUS
         widgets.btn_home.clicked.connect(self.buttonClick)
         widgets.btn_ai_chat.clicked.connect(self.buttonClick)
         widgets.btn_history.clicked.connect(self.buttonClick)
-        # widgets.btn_widgets.clicked.connect(self.buttonClick)
-        # widgets.btn_new.clicked.connect(self.buttonClick)
-        # widgets.btn_save.clicked.connect(self.buttonClick)
         widgets.btn_theme.clicked.connect(self.buttonClick)
         widgets.btn_exit.clicked.connect(self.buttonClick)
 
@@ -561,18 +692,8 @@ class MainWindow(QMainWindow):
         # History list selection change
         widgets.historyList.itemSelectionChanged.connect(self.onHistorySelectionChanged)
 
-        # EXTRA LEFT BOX
-        # def openCloseLeftBox():
-        #     UIFunctions.toggleLeftBox(self, True)
-
-        # widgets.toggleLeftBox.clicked.connect(openCloseLeftBox)
-        # widgets.extraCloseColumnBtn.clicked.connect(openCloseLeftBox)
-
-        # EXTRA RIGHT BOX
-        # def openCloseRightBox():
-        #     UIFunctions.toggleRightBox(self, True)
-
-        # widgets.settingsTopBtn.clicked.connect(openCloseRightBox)
+        # 新增：设置语音和图片功能
+        self.setupSimpleVoiceAndImage()
 
         # Load history on startup
         self.loadHistoryList()
@@ -594,10 +715,7 @@ class MainWindow(QMainWindow):
 
         # SET THEME AND HACKS
         if useCustomTheme:
-            # LOAD AND APPLY STYLE
             UIFunctions.theme(self, themeFile, True)
-
-            # SET HACKS
             AppFunctions.setThemeHack(self)
 
         # SET HOME PAGE AND SELECT MENU
@@ -609,51 +727,264 @@ class MainWindow(QMainWindow):
 
         def init_dify_integration(self):
             """初始化Dify集成"""
-            # Dify相关属性
             self.dify_conversation_id = None
-
-            # 加载API配置
             config = APIConfig.load_config()
             if not config.get("dify_api_key"):
-                # 延迟显示设置提示
                 QTimer.singleShot(2000, self.showFirstTimeSetup)
+
+    def setupSimpleVoiceAndImage(self):
+        """设置简单的语音和图片功能"""
+
+        # 添加语音按钮
+        self.voiceButton = QPushButton()
+        self.voiceButton.setObjectName("voiceButton")
+        self.voiceButton.setMinimumSize(QSize(50, 80))
+        self.voiceButton.setMaximumSize(QSize(50, 80))
+        self.voiceButton.setCursor(QCursor(Qt.PointingHandCursor))
+        self.voiceButton.setStyleSheet("""
+            QPushButton {
+                background-color: rgb(34, 139, 34);
+                border: none;
+                border-radius: 8px;
+                padding: 8px;
+                font-size: 20px;
+            }
+            QPushButton:hover {
+                background-color: rgb(50, 155, 50);
+            }
+            QPushButton:pressed {
+                background-color: rgb(220, 53, 69);
+            }
+        """)
+        self.voiceButton.setText("🎤")
+        self.voiceButton.setToolTip("按住录音")
+
+        # 语音按钮事件
+        self.voiceButton.pressed.connect(self.startVoiceRecording)
+        self.voiceButton.released.connect(self.stopVoiceRecording)
+
+        # 添加图片按钮
+        self.imageButton = QPushButton()
+        self.imageButton.setObjectName("imageButton")
+        self.imageButton.setMinimumSize(QSize(50, 80))
+        self.imageButton.setMaximumSize(QSize(50, 80))
+        self.imageButton.setCursor(QCursor(Qt.PointingHandCursor))
+        self.imageButton.setStyleSheet("""
+            QPushButton {
+                background-color: rgb(102, 51, 153);
+                border: none;
+                border-radius: 8px;
+                padding: 8px;
+                font-size: 20px;
+            }
+            QPushButton:hover {
+                background-color: rgb(122, 71, 173);
+            }
+            QPushButton:pressed {
+                background-color: rgb(82, 31, 133);
+            }
+        """)
+        self.imageButton.setText("📷")
+        self.imageButton.setToolTip("上传图片")
+        self.imageButton.clicked.connect(self.selectImage)
+
+        # 将按钮添加到现有的输入布局中
+        widgets.input_horizontal_layout.insertWidget(1, self.voiceButton)
+        widgets.input_horizontal_layout.insertWidget(2, self.imageButton)
+
+        # 添加图片预览标签
+        self.imagePreview = QLabel()
+        self.imagePreview.setObjectName("imagePreview")
+        self.imagePreview.setMaximumSize(QSize(100, 80))
+        self.imagePreview.setStyleSheet("""
+            QLabel {
+                border: 2px dashed rgb(89, 92, 111);
+                border-radius: 8px;
+                background-color: rgba(44, 49, 58, 0.5);
+                color: rgb(113, 126, 149);
+                text-align: center;
+            }
+        """)
+        self.imagePreview.setText("暂无图片")
+        self.imagePreview.setAlignment(Qt.AlignCenter)
+        self.imagePreview.hide()
+
+        # 将图片预览添加到聊天输入布局上方
+        widgets.chat_input_layout.insertWidget(0, self.imagePreview)
+
+    def startVoiceRecording(self):
+        """开始语音录制"""
+        if self.is_voice_recording:
+            return
+
+        print("🎤 开始录音...")
+        self.is_voice_recording = True
+
+        # 更新按钮样式
+        self.voiceButton.setText("⏹️")
+        self.voiceButton.setStyleSheet("""
+            QPushButton {
+                background-color: rgb(220, 53, 69);
+                border: none;
+                border-radius: 8px;
+                padding: 8px;
+                font-size: 20px;
+            }
+        """)
+
+        # 创建并启动语音线程
+        self.voice_thread = SimpleVoiceThread()
+        self.voice_thread.voice_result.connect(self.handleVoiceResult)
+        self.voice_thread.voice_error.connect(self.handleVoiceError)
+        self.voice_thread.start_recording()
+
+    def stopVoiceRecording(self):
+        """停止语音录制"""
+        if not self.is_voice_recording:
+            return
+
+        print("⏹️ 停止录音...")
+        self.is_voice_recording = False
+
+        # 恢复按钮样式
+        self.voiceButton.setText("🎤")
+        self.voiceButton.setStyleSheet("""
+            QPushButton {
+                background-color: rgb(34, 139, 34);
+                border: none;
+                border-radius: 8px;
+                padding: 8px;
+                font-size: 20px;
+            }
+            QPushButton:hover {
+                background-color: rgb(50, 155, 50);
+            }
+        """)
+
+        if self.voice_thread:
+            self.voice_thread.stop_recording()
+
+    def handleVoiceResult(self, text):
+        """处理语音识别结果"""
+        print(f"✅ 语音识别成功: {text}")
+
+        # 将识别结果添加到输入框
+        current_text = widgets.chatInputArea.toPlainText()
+        if current_text.strip():
+            widgets.chatInputArea.setPlainText(current_text + " " + text)
+        else:
+            widgets.chatInputArea.setPlainText(text)
+
+    def handleVoiceError(self, error_msg):
+        """处理语音识别错误"""
+        print(f"❌ 语音识别失败: {error_msg}")
+
+    def selectImage(self):
+        """选择图片"""
+        file_dialog = QFileDialog()
+        image_path, _ = file_dialog.getOpenFileName(
+            self,
+            "选择图片",
+            "",
+            "图片文件 (*.png *.jpg *.jpeg *.gif *.bmp);;所有文件 (*)"
+        )
+
+        if image_path:
+            try:
+                processed_path = process_uploaded_image(image_path)
+                self.current_image_path = processed_path
+                self.showImagePreview(processed_path)
+                print(f"✅ 图片已选择: {os.path.basename(processed_path)}")
+
+            except Exception as e:
+                print(f"❌ 图片处理失败: {e}")
+                self.current_image_path = None
+
+    def showImagePreview(self, image_path):
+        """显示图片预览"""
+        try:
+            pixmap = QPixmap(image_path)
+            if not pixmap.isNull():
+                scaled_pixmap = pixmap.scaled(
+                    80, 60,
+                    Qt.KeepAspectRatio,
+                    Qt.SmoothTransformation
+                )
+                self.imagePreview.setPixmap(scaled_pixmap)
+                self.imagePreview.setText("")
+                self.imagePreview.show()
+
+                # 双击清除
+                self.imagePreview.mouseDoubleClickEvent = lambda event: self.clearImagePreview()
+
+            else:
+                self.imagePreview.setText("图片加载失败")
+
+        except Exception as e:
+            print(f"图片预览失败: {e}")
+            self.imagePreview.setText("预览失败")
+
+    def clearImagePreview(self):
+        """清除图片预览"""
+        self.current_image_path = None
+        self.imagePreview.clear()
+        self.imagePreview.setText("暂无图片")
+        self.imagePreview.hide()
+        print("🗑️ 图片已清除")
+
+    def addImageToChat(self, image_path):
+        """添加图片到聊天界面"""
+        try:
+            image_widget = QLabel()
+            image_widget.setMaximumSize(QSize(300, 200))
+            image_widget.setStyleSheet("""
+                QLabel {
+                    border: 1px solid rgb(89, 92, 111);
+                    border-radius: 8px;
+                    padding: 5px;
+                    background-color: rgb(44, 49, 58);
+                }
+            """)
+
+            pixmap = QPixmap(image_path)
+            if not pixmap.isNull():
+                scaled_pixmap = pixmap.scaled(
+                    280, 180,
+                    Qt.KeepAspectRatio,
+                    Qt.SmoothTransformation
+                )
+                image_widget.setPixmap(scaled_pixmap)
+            else:
+                image_widget.setText("🖼️ 图片显示失败")
+
+            layout = widgets.chatContentLayout
+            layout.insertWidget(layout.count() - 1, image_widget)
+
+            QTimer.singleShot(100, self.scrollToBottom)
+
+        except Exception as e:
+            print(f"添加图片到聊天失败: {e}")
 
     def startChatFromHome(self):
         """从主页跳转到对话页面"""
-        # 切换到AI聊天页面
         widgets.stackedWidget.setCurrentWidget(widgets.ai_chat)
-
-        # 重置所有按钮样式并选中AI聊天按钮
         UIFunctions.resetStyle(self, "btn_ai_chat")
         widgets.btn_ai_chat.setStyleSheet(UIFunctions.selectMenu(widgets.btn_ai_chat.styleSheet()))
-
-        # 聚焦到输入框
         widgets.chatInputArea.setFocus()
-
         print("Started conversation from home page")
 
     def updateUITexts(self):
         """Update UI texts to English"""
-        # Chat title
         widgets.chat_title.setText("🤖 TravelMind AI Assistant")
-
-        # Clear chat button
-        widgets.clearChatButton.setText("New Chat")  # 改为更合适的文字
-
-        # Send button
+        widgets.clearChatButton.setText("New Chat")
         widgets.sendButton.setText("Send")
-
-        # Input placeholder
         widgets.chatInputArea.setPlaceholderText(
             "Please enter your travel question, e.g.: Recommend a 3-day Shanghai tour...")
-
-        # Welcome message
         widgets.welcome_message.setText(
             "👋 Welcome to TravelMind AI Assistant!\n\n"
             "I can help you plan travel routes, recommend attractions, check weather information, and more.\n"
             "Please enter your question below to start a conversation.")
 
-        # Update suggestion buttons
         suggestions = ["Shanghai 3-day tour", "Xiamen food guide", "Beijing family trip", "Chengdu weekend tour"]
         for i, btn in enumerate(widgets.suggestion_buttons):
             if i < len(suggestions):
@@ -661,20 +992,14 @@ class MainWindow(QMainWindow):
 
     def startNewChat(self):
         """Start a new chat session"""
-        # Save current chat if it has content
         if self.chat_history and self.auto_save_enabled:
             self.current_session_id = self.history_manager.save_or_update_chat(
                 self.chat_history, self.current_session_id
             )
 
-        # Reset for new chat
         self.chat_history = []
         self.current_session_id = None
-
-        # Clear UI
         self.clearChatUI()
-
-        # Refresh history list
         self.loadHistoryList()
 
     def autoSaveCurrentChat(self):
@@ -683,8 +1008,6 @@ class MainWindow(QMainWindow):
             self.current_session_id = self.history_manager.save_or_update_chat(
                 self.chat_history, self.current_session_id
             )
-
-            # Refresh history list in background (don't disturb current conversation)
             QTimer.singleShot(100, self.loadHistoryList)
 
     def loadHistoryList(self):
@@ -696,7 +1019,6 @@ class MainWindow(QMainWindow):
             item = ChatHistoryItem(chat_data)
             widgets.historyList.addItem(item)
 
-        # Update button states
         self.onHistorySelectionChanged()
 
     def onHistorySelectionChanged(self):
@@ -717,22 +1039,18 @@ class MainWindow(QMainWindow):
         if not isinstance(item, ChatHistoryItem):
             return
 
-        # Save current chat first if needed
         if self.chat_history and self.auto_save_enabled:
             self.autoSaveCurrentChat()
 
-        # Load chat messages
         chat_data = item.chat_data
         self.chat_history = chat_data['messages'].copy()
-        self.current_session_id = chat_data['id']  # Set session ID to existing chat
+        self.current_session_id = chat_data['id']
 
-        # Clear and display messages in chat area
         self.clearChatUI()
         for message in self.chat_history:
             is_user = message['role'] == 'user'
             self.addChatMessage(message['content'], is_user=is_user)
 
-        # Switch to AI chat page
         widgets.stackedWidget.setCurrentWidget(widgets.ai_chat)
         UIFunctions.resetStyle(self, "btn_ai_chat")
         widgets.btn_ai_chat.setStyleSheet(UIFunctions.selectMenu(widgets.btn_ai_chat.styleSheet()))
@@ -747,7 +1065,6 @@ class MainWindow(QMainWindow):
         if not isinstance(item, ChatHistoryItem):
             return
 
-        # Confirm deletion
         reply = QMessageBox.question(
             self,
             "Delete Chat",
@@ -757,14 +1074,10 @@ class MainWindow(QMainWindow):
         )
 
         if reply == QMessageBox.Yes:
-            # If deleting current session, reset session ID
             if self.current_session_id == item.chat_data['id']:
                 self.current_session_id = None
 
-            # Delete from history file
             self.history_manager.delete_chat(item.chat_data['id'])
-
-            # Reload history list
             self.loadHistoryList()
 
     def clearAllHistory(self):
@@ -779,46 +1092,37 @@ class MainWindow(QMainWindow):
 
         if reply == QMessageBox.Yes:
             self.history_manager.clear_all_history()
-            self.current_session_id = None  # Reset current session
+            self.current_session_id = None
             self.loadHistoryList()
 
     def eventFilter(self, obj, event):
         """Event filter to handle enter key in input box"""
         if obj == widgets.chatInputArea and event.type() == QEvent.KeyPress:
             if event.key() == Qt.Key_Return and not (event.modifiers() & Qt.ShiftModifier):
-                # Enter to send, Shift+Enter for new line
                 self.sendMessage()
                 return True
             elif event.key() == Qt.Key_Return and (event.modifiers() & Qt.ShiftModifier):
-                # Shift+Enter for new line
                 return False
         return super().eventFilter(obj, event)
 
     def addChatMessage(self, message, is_user=True, streaming=False):
         """Add chat message to interface"""
-        # Remove welcome message if it exists
         try:
             if hasattr(widgets, 'welcome_message') and widgets.welcome_message:
                 widgets.welcome_message.hide()
                 self.welcome_shown = True
         except RuntimeError:
-            # Widget already deleted, ignore
             pass
 
-        # Create message component
         if streaming:
-            # Create empty message for streaming
             chat_message = StreamingChatMessage(is_user=is_user)
         else:
-            # Create complete message
             chat_message = StreamingChatMessage(is_user=is_user)
             chat_message.setText(message)
 
-        # Insert into layout (before spacer)
         layout = widgets.chatContentLayout
         layout.insertWidget(layout.count() - 1, chat_message)
 
-        # Scroll to bottom
         QTimer.singleShot(100, self.scrollToBottom)
 
         return chat_message
@@ -846,25 +1150,40 @@ class MainWindow(QMainWindow):
             self.typing_indicator = None
 
     def sendMessage(self):
-        """发送消息"""
+        """发送消息（支持语音识别的文字和图片）"""
         message = widgets.chatInputArea.toPlainText().strip()
-        if not message:
+
+        if not message and not self.current_image_path:
             return
 
-        # 加载API配置
         config = APIConfig.load_config()
         api_key = config.get("dify_api_key", "")
 
-        # 清空输入框
+        # 清空输入框和图片预览
         widgets.chatInputArea.clear()
+        image_path = self.current_image_path
+        self.clearImagePreview()
 
         # 禁用发送按钮
         widgets.sendButton.setEnabled(False)
         widgets.sendButton.setText("Sending...")
 
         # 添加用户消息
-        self.addChatMessage(message, is_user=True)
-        self.chat_history.append({"role": "user", "content": message})
+        if message:
+            self.addChatMessage(message, is_user=True)
+            self.chat_history.append({"role": "user", "content": message})
+
+        # 如果有图片，也显示在聊天中
+        if image_path:
+            self.addImageToChat(image_path)
+            img_message = f"[图片: {os.path.basename(image_path)}]"
+            if message:
+                combined_message = f"{message}\n{img_message}"
+            else:
+                combined_message = img_message
+                message = "请分析这张图片"
+
+            self.chat_history.append({"role": "user", "content": combined_message})
 
         # 创建AI消息用于流式显示
         self.current_ai_message = self.addChatMessage("", is_user=False, streaming=True)
@@ -873,9 +1192,10 @@ class MainWindow(QMainWindow):
         self.startCursorBlink()
 
         # 创建并启动AI响应线程
-        self.ai_thread = AIResponseThread(
+        self.ai_thread = EnhancedAIResponseThread(
             message,
             api_key if api_key else None,
+            image_path,
             getattr(self, 'dify_conversation_id', None),
             stream=config.get("stream_enabled", True)
         )
@@ -891,55 +1211,43 @@ class MainWindow(QMainWindow):
         """Handle each character from streaming response"""
         if self.current_ai_message:
             self.current_ai_message.appendText(char)
-            # Scroll to bottom with each new character
             self.scrollToBottom()
 
     def handleDifyResponseComplete(self, conversation_id):
         """处理Dify响应完成"""
-        # 停止光标闪烁
         self.stopCursorBlink()
 
-        # 保存conversation_id用于上下文连续对话
         if conversation_id:
             self.dify_conversation_id = conversation_id
 
-        # 添加完整消息到历史
         if self.current_ai_message:
             self.chat_history.append({
                 "role": "assistant",
                 "content": self.current_ai_message.current_text
             })
 
-        # 自动保存对话
         self.autoSaveCurrentChat()
 
-        # 恢复发送按钮
         widgets.sendButton.setEnabled(True)
         widgets.sendButton.setText("Send")
 
-        # 清理线程
         if self.ai_thread:
             self.ai_thread.quit()
             self.ai_thread.wait()
             self.ai_thread = None
 
-        # 清除当前消息引用
         self.current_ai_message = None
 
     def handleAPIError(self, error_message):
         """处理API错误"""
-        # 停止光标闪烁
         self.stopCursorBlink()
 
-        # 显示错误消息
         if self.current_ai_message:
             self.current_ai_message.setText(f"❌ 错误: {error_message}")
 
-        # 恢复发送按钮
         widgets.sendButton.setEnabled(True)
         widgets.sendButton.setText("Send")
 
-        # 清理线程
         if self.ai_thread:
             self.ai_thread.quit()
             self.ai_thread.wait()
@@ -952,7 +1260,7 @@ class MainWindow(QMainWindow):
         self.cursor_visible = True
         self.cursor_timer = QTimer()
         self.cursor_timer.timeout.connect(self.toggleCursor)
-        self.cursor_timer.start(500)  # Blink every 500ms
+        self.cursor_timer.start(500)
 
     def stopCursorBlink(self):
         """Stop blinking cursor effect"""
@@ -978,9 +1286,7 @@ class MainWindow(QMainWindow):
 
     def clearChat(self):
         """清除对话"""
-        # 重置Dify会话ID
         self.dify_conversation_id = None
-        # 调用原来的清除方法
         self.startNewChat()
 
     def showFirstTimeSetup(self):
@@ -1001,46 +1307,34 @@ class MainWindow(QMainWindow):
         """显示API设置对话框"""
         dialog = APISettingsDialog(self)
         if dialog.exec() == QDialog.Accepted:
-            # 配置已更新，重置会话
             self.dify_conversation_id = None
 
     def clearChatUI(self):
         """Clear only the chat UI, not the data"""
-        # Stop any ongoing streaming
         if self.ai_thread and self.ai_thread.isRunning():
             self.ai_thread.cancel()
             self.ai_thread.quit()
             self.ai_thread.wait()
             self.ai_thread = None
 
-        # Stop cursor timer
         self.stopCursorBlink()
-
-        # Clear current message reference
         self.current_ai_message = None
 
-        # Clear messages from UI (except welcome message and spacer)
         layout = widgets.chatContentLayout
-        # Remove all widgets except the last one (spacer)
         while layout.count() > 1:
             child = layout.takeAt(0)
             if child.widget() and child.widget() != widgets.welcome_message:
                 child.widget().deleteLater()
 
-        # Show welcome message if it still exists
         try:
             if hasattr(widgets, 'welcome_message') and widgets.welcome_message:
                 widgets.welcome_message.show()
                 self.welcome_shown = False
         except RuntimeError:
-            # If welcome message was deleted, create a new one
             self.createWelcomeMessage()
             self.welcome_shown = False
 
-        # Clear input box
         widgets.chatInputArea.clear()
-
-        # Enable send button
         widgets.sendButton.setEnabled(True)
         widgets.sendButton.setText("Send")
 
@@ -1065,96 +1359,59 @@ class MainWindow(QMainWindow):
             "I can help you plan travel routes, recommend attractions, check weather information, and more.\n"
             "Please enter your question below to start a conversation.")
 
-        # Insert at the beginning of the layout
         layout = widgets.chatContentLayout
         layout.insertWidget(0, widgets.welcome_message)
 
-    # BUTTONS CLICK
-    # Post here your functions for clicked buttons
-    # ///////////////////////////////////////////////////////////////
     def buttonClick(self):
-        # GET BUTTON CLICKED
+        """Handle button clicks"""
         btn = self.sender()
         btnName = btn.objectName()
 
-        # SHOW HOME PAGE
         if btnName == "btn_home":
             widgets.stackedWidget.setCurrentWidget(widgets.home)
             UIFunctions.resetStyle(self, btnName)
             btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))
 
-        # SHOW AI CHAT PAGE
         if btnName == "btn_ai_chat":
             widgets.stackedWidget.setCurrentWidget(widgets.ai_chat)
             UIFunctions.resetStyle(self, btnName)
             btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))
 
-        # SHOW HISTORY PAGE
         if btnName == "btn_history":
             widgets.stackedWidget.setCurrentWidget(widgets.history)
             UIFunctions.resetStyle(self, btnName)
             btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))
-            # Refresh history list when showing the page
             self.loadHistoryList()
-
-        # SHOW WIDGETS PAGE
-        # if btnName == "btn_widgets":
-        #     widgets.stackedWidget.setCurrentWidget(widgets.widgets)
-        #     UIFunctions.resetStyle(self, btnName)
-        #     btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))
-
-        # SHOW NEW PAGE
-        # if btnName == "btn_new":
-        #     widgets.stackedWidget.setCurrentWidget(widgets.new_page)  # SET PAGE
-        #     UIFunctions.resetStyle(self, btnName)  # RESET ANOTHERS BUTTONS SELECTED
-        #     btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))  # SELECT MENU
-
-        # if btnName == "btn_save":
-        #     # 手动保存当前对话
-        #     if self.chat_history:
-        #         self.autoSaveCurrentChat()
-        #         QMessageBox.information(self, "保存成功", "当前对话已保存到历史记录")
-        #     else:
-        #         QMessageBox.information(self, "提示", "当前没有对话内容可以保存")
 
         if btnName == "btn_theme":
             if self.useCustomTheme:
                 themeFile = os.path.abspath(os.path.join(self.absPath, "themes\\py_dracula_light.qss"))
                 UIFunctions.theme(self, themeFile, True)
-                # SET HACKS
                 AppFunctions.setThemeHack(self)
                 self.useCustomTheme = False
             else:
                 themeFile = os.path.abspath(os.path.join(self.absPath, "themes\\py_dracula_dark.qss"))
                 UIFunctions.theme(self, themeFile, True)
-                # SET HACKS
                 AppFunctions.setThemeHack(self)
                 self.useCustomTheme = True
 
         if btnName == "btn_exit":
-            # 退出前保存当前对话
             if self.chat_history and self.auto_save_enabled:
                 self.autoSaveCurrentChat()
             print("Exit BTN clicked!")
             QApplication.quit()
             return
 
-        # PRINT BTN NAME
         print(f'Button "{btnName}" pressed!')
 
-    # RESIZE EVENTS
-    # ///////////////////////////////////////////////////////////////
     def resizeEvent(self, event):
-        # Update Size Grips
+        """Handle resize events"""
         UIFunctions.resize_grips(self)
 
-    # MOUSE CLICK EVENTS
-    # ///////////////////////////////////////////////////////////////
     def mousePressEvent(self, event):
-        # SET DRAG POS WINDOW
+        """Handle mouse press events"""
         self.dragPos = event.globalPosition().toPoint()
 
-        # PRINT MOUSE EVENTS
         if event.buttons() == Qt.LeftButton:
             print('Mouse click: LEFT CLICK')
         if event.buttons() == Qt.RightButton:
@@ -1162,7 +1419,6 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         """Handle application close event"""
-        # Save current chat before closing
         if self.chat_history and self.auto_save_enabled:
             self.autoSaveCurrentChat()
         event.accept()
@@ -1181,11 +1437,9 @@ class APISettingsDialog(QDialog):
     def setupUI(self):
         layout = QVBoxLayout(self)
 
-        # Dify API设置组
         dify_group = QGroupBox("Dify API Configuration")
         dify_layout = QVBoxLayout(dify_group)
 
-        # API密钥
         key_layout = QHBoxLayout()
         key_layout.addWidget(QLabel("API Key:"))
         self.api_key_edit = QLineEdit()
@@ -1194,12 +1448,10 @@ class APISettingsDialog(QDialog):
         key_layout.addWidget(self.api_key_edit)
         dify_layout.addLayout(key_layout)
 
-        # 显示/隐藏密钥按钮
         show_key_btn = QPushButton("Show/Hide")
         show_key_btn.clicked.connect(self.togglePasswordVisibility)
         key_layout.addWidget(show_key_btn)
 
-        # 基础URL
         url_layout = QHBoxLayout()
         url_layout.addWidget(QLabel("Base URL:"))
         self.base_url_edit = QLineEdit()
@@ -1209,15 +1461,12 @@ class APISettingsDialog(QDialog):
 
         layout.addWidget(dify_group)
 
-        # 响应设置组
         response_group = QGroupBox("Response Settings")
         response_layout = QVBoxLayout(response_group)
 
-        # 流式输出
         self.stream_checkbox = QCheckBox("Enable streaming output (typewriter effect)")
         response_layout.addWidget(self.stream_checkbox)
 
-        # 打字速度
         speed_layout = QHBoxLayout()
         speed_layout.addWidget(QLabel("Typing speed:"))
         self.speed_spinbox = QSpinBox()
@@ -1228,7 +1477,6 @@ class APISettingsDialog(QDialog):
 
         layout.addWidget(response_group)
 
-        # 按钮
         button_layout = QHBoxLayout()
         self.test_button = QPushButton("Test Connection")
         self.save_button = QPushButton("Save")
@@ -1241,7 +1489,6 @@ class APISettingsDialog(QDialog):
 
         layout.addLayout(button_layout)
 
-        # 连接信号
         self.test_button.clicked.connect(self.testConnection)
         self.save_button.clicked.connect(self.saveSettings)
         self.cancel_button.clicked.connect(self.reject)
@@ -1275,9 +1522,7 @@ class APISettingsDialog(QDialog):
 
         try:
             client = DifyAPIClient(api_key, base_url)
-            # 发送测试消息
             response = client.chat_completion_stream("Hello", user_id="test")
-            # 如果没有异常，说明连接成功
             QMessageBox.information(self, "Success", "API connection test successful!")
         except Exception as e:
             QMessageBox.critical(self, "Error", f"API connection test failed:\n{str(e)}")
