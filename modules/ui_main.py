@@ -1412,8 +1412,8 @@ class Ui_MainWindow(object):
         self.sendButton = QPushButton(self.chat_input_frame)
         self.sendButton.setObjectName(u"sendButton")
         self.sendButton.setText("Send")
-        self.sendButton.setMinimumSize(QSize(80, 80))
-        self.sendButton.setMaximumSize(QSize(80, 80))
+        self.sendButton.setMinimumSize(QSize(120, 80))
+        self.sendButton.setMaximumSize(QSize(120, 80))
         self.sendButton.setCursor(QCursor(Qt.PointingHandCursor))
         self.sendButton.setStyleSheet(u"""
             QPushButton {

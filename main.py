@@ -5,6 +5,9 @@ import time
 import json
 from datetime import datetime
 from os.path import abspath
+import requests
+import json
+from sseclient import SSEClient
 
 # IMPORT / GUI AND MODULES AND WIDGETS
 # ///////////////////////////////////////////////////////////////
@@ -76,12 +79,16 @@ class StreamingChatMessage(QFrame):
             self.message_label.setMaximumWidth(800)  # Increased from 500
             self.message_label.setStyleSheet("""
                 QLabel {
-                    background-color: rgb(189, 147, 249);
-                    color: white;
-                    border-radius: 12px;
-                    padding: 10px 15px;
-                    font-size: 14px;
-                }
+        background-color: rgb(44, 49, 58);
+        color: rgb(221, 221, 221);
+        border-radius: 12px;
+        padding: 12px 16px;
+        font-size: 16px;                                                    /* 字体大小 */
+        font-family: "Microsoft YaHei UI", "PingFang SC", system-ui;       /* 字体类型 */
+        font-weight: normal;                                                /* 字体粗细 */
+        line-height: 1.5;                                                  /* 行高 */
+        margin-left: 10px;
+    }
             """)
             layout.addWidget(self.message_label)
         else:
@@ -108,7 +115,10 @@ class StreamingChatMessage(QFrame):
                     color: rgb(221, 221, 221);
                     border-radius: 12px;
                     padding: 10px 15px;
-                    font-size: 14px;
+                    font-size: 16px;                    /* 字体大小：14px -> 16px */
+                    font-family: "Microsoft YaHei UI";  /* 字体：微软雅黑 */
+                    font-weight: normal;                /* 字体粗细 */
+                    line-height: 1.4;                  /* 行高：让文字更易读 */
                     margin-left: 10px;
                 }
             """)
@@ -196,33 +206,180 @@ class TypingIndicator(QFrame):
         self.typing_label.setText(text)
 
 
-class AIResponseThread(QThread):
-    """Thread for AI response generation with streaming"""
-    response_chunk = Signal(str)  # Emit each character
-    response_complete = Signal()  # Signal when complete
+class DifyAPIClient:
+    """Dify API客户端"""
 
-    def __init__(self, message):
+    def __init__(self, api_key, base_url="https://api.dify.ai/v1"):
+        self.api_key = api_key
+        self.base_url = base_url
+        self.headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+
+    def chat_completion_stream(self, message, conversation_id=None, user_id="default"):
+        """流式对话完成"""
+        url = f"{self.base_url}/chat-messages"
+
+        data = {
+            "inputs": {},
+            "query": message,
+            "response_mode": "streaming",
+            "user": user_id
+        }
+
+        if conversation_id:
+            data["conversation_id"] = conversation_id
+
+        try:
+            response = requests.post(
+                url,
+                headers=self.headers,
+                json=data,
+                stream=True,
+                timeout=30
+            )
+            response.raise_for_status()
+            return response
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"API请求失败: {str(e)}")
+
+
+class APIConfig:
+    """API配置管理"""
+    CONFIG_FILE = "api_config.json"
+
+    @staticmethod
+    def load_config():
+        """加载配置"""
+        try:
+            with open(APIConfig.CONFIG_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except:
+            return {
+                "dify_api_key": "",
+                "dify_base_url": "https://api.dify.ai/v1",
+                "stream_enabled": True,
+                "typing_speed": 0.03
+            }
+
+    @staticmethod
+    def save_config(config):
+        """保存配置"""
+        with open(APIConfig.CONFIG_FILE, 'w', encoding='utf-8') as f:
+            json.dump(config, f, ensure_ascii=False, indent=2)
+
+
+class AIResponseThread(QThread):
+    """使用Dify API的AI响应线程（支持流式输出）"""
+    response_chunk = Signal(str)  # 发送每个字符
+    response_complete = Signal(str)  # 完成时发送conversation_id
+    error_occurred = Signal(str)  # 错误信号
+
+    def __init__(self, message, api_key=None, conversation_id=None, stream=True):
         super().__init__()
         self.message = message
+        self.api_key = api_key
+        self.conversation_id = conversation_id
+        self.stream = stream
         self.is_cancelled = False
 
+        # 如果没有API密钥，使用测试模式
+        if not api_key:
+            self.test_mode = True
+        else:
+            self.test_mode = False
+            self.client = DifyAPIClient(api_key)
+
     def run(self):
-        # Simulate initial thinking time
+        try:
+            if self.test_mode:
+                self._handle_test_response()
+            elif self.stream:
+                self._handle_streaming_response()
+            else:
+                self._handle_blocking_response()
+        except Exception as e:
+            self.error_occurred.emit(str(e))
+
+    def _handle_test_response(self):
+        """测试模式响应"""
         time.sleep(0.5)
+        response = "这是一个测试回复。请在设置中配置Dify API密钥以获得真正的AI回复。"
 
-        # Always return this test message but stream it character by character
-        response = "This is a test message. It is used to test the functionality of the application. This is a test message. It is used to test the functionality of the application. This is a test message. It is used to test the functionality of the application."
-
-        # Stream each character with delay
         for char in response:
             if self.is_cancelled:
                 break
             self.response_chunk.emit(char)
-            time.sleep(0.05)  # 50ms delay between characters for typewriter effect
+            time.sleep(0.05)
 
-        # Signal completion
         if not self.is_cancelled:
-            self.response_complete.emit()
+            self.response_complete.emit("")
+
+    def _handle_streaming_response(self):
+        """处理流式响应"""
+        try:
+            response = self.client.chat_completion_stream(
+                self.message,
+                self.conversation_id
+            )
+
+            client = SSEClient(response)
+            complete_response = ""
+            new_conversation_id = self.conversation_id
+
+            for event in client.events():
+                if self.is_cancelled:
+                    break
+
+                if event.data and event.data != '[DONE]':
+                    try:
+                        data = json.loads(event.data)
+
+                        if data.get("event") == "message":
+                            if not new_conversation_id and data.get("conversation_id"):
+                                new_conversation_id = data["conversation_id"]
+
+                            content = data.get("answer", "")
+                            if content:
+                                complete_response = content
+                                for char in content:
+                                    if self.is_cancelled:
+                                        break
+                                    self.response_chunk.emit(char)
+                                    time.sleep(0.03)
+
+                        elif data.get("event") == "message_end":
+                            break
+
+                    except json.JSONDecodeError:
+                        continue
+
+            if not self.is_cancelled:
+                self.response_complete.emit(new_conversation_id or "")
+
+        except Exception as e:
+            self.error_occurred.emit(f"API调用错误: {str(e)}")
+
+    def _handle_blocking_response(self):
+        """处理阻塞式响应（回退方案）"""
+        try:
+            result = self.client.chat_completion(self.message, self.conversation_id)
+
+            content = result.get("answer", "抱歉，我现在无法回答您的问题。")
+            conversation_id = result.get("conversation_id", "")
+
+            for char in content:
+                if self.is_cancelled:
+                    break
+                self.response_chunk.emit(char)
+                time.sleep(0.03)
+
+            if not self.is_cancelled:
+                self.response_complete.emit(conversation_id)
+
+        except Exception as e:
+            self.error_occurred.emit(f"API调用错误: {str(e)}")
 
     def cancel(self):
         self.is_cancelled = True
@@ -449,6 +606,17 @@ class MainWindow(QMainWindow):
         widgets.btn_home.setStyleSheet(UIFunctions.selectMenu(widgets.btn_home.styleSheet()))
 
         widgets.textEdit.setPlainText("")
+
+        def init_dify_integration(self):
+            """初始化Dify集成"""
+            # Dify相关属性
+            self.dify_conversation_id = None
+
+            # 加载API配置
+            config = APIConfig.load_config()
+            if not config.get("dify_api_key"):
+                # 延迟显示设置提示
+                QTimer.singleShot(2000, self.showFirstTimeSetup)
 
     def startChatFromHome(self):
         """从主页跳转到对话页面"""
@@ -678,32 +846,45 @@ class MainWindow(QMainWindow):
             self.typing_indicator = None
 
     def sendMessage(self):
-        """Send message"""
+        """发送消息"""
         message = widgets.chatInputArea.toPlainText().strip()
         if not message:
             return
 
-        # Clear input box
+        # 加载API配置
+        config = APIConfig.load_config()
+        api_key = config.get("dify_api_key", "")
+
+        # 清空输入框
         widgets.chatInputArea.clear()
 
-        # Disable send button
+        # 禁用发送按钮
         widgets.sendButton.setEnabled(False)
         widgets.sendButton.setText("Sending...")
 
-        # Add user message
+        # 添加用户消息
         self.addChatMessage(message, is_user=True)
         self.chat_history.append({"role": "user", "content": message})
 
-        # Create empty AI message for streaming
+        # 创建AI消息用于流式显示
         self.current_ai_message = self.addChatMessage("", is_user=False, streaming=True)
 
-        # Start cursor blinking
+        # 开始光标闪烁
         self.startCursorBlink()
 
-        # Create and start AI response thread
-        self.ai_thread = AIResponseThread(message)
+        # 创建并启动AI响应线程
+        self.ai_thread = AIResponseThread(
+            message,
+            api_key if api_key else None,
+            getattr(self, 'dify_conversation_id', None),
+            stream=config.get("stream_enabled", True)
+        )
+
+        # 连接信号
         self.ai_thread.response_chunk.connect(self.handleStreamingChunk)
-        self.ai_thread.response_complete.connect(self.handleResponseComplete)
+        self.ai_thread.response_complete.connect(self.handleDifyResponseComplete)
+        self.ai_thread.error_occurred.connect(self.handleAPIError)
+
         self.ai_thread.start()
 
     def handleStreamingChunk(self, char):
@@ -713,29 +894,57 @@ class MainWindow(QMainWindow):
             # Scroll to bottom with each new character
             self.scrollToBottom()
 
-    def handleResponseComplete(self):
-        """Handle completion of streaming response"""
-        # Stop cursor blinking
+    def handleDifyResponseComplete(self, conversation_id):
+        """处理Dify响应完成"""
+        # 停止光标闪烁
         self.stopCursorBlink()
 
-        # Add complete message to history
-        if self.current_ai_message:
-            self.chat_history.append({"role": "assistant", "content": self.current_ai_message.current_text})
+        # 保存conversation_id用于上下文连续对话
+        if conversation_id:
+            self.dify_conversation_id = conversation_id
 
-        # 🔥 AUTO-SAVE: 每次AI回复完成后自动保存
+        # 添加完整消息到历史
+        if self.current_ai_message:
+            self.chat_history.append({
+                "role": "assistant",
+                "content": self.current_ai_message.current_text
+            })
+
+        # 自动保存对话
         self.autoSaveCurrentChat()
 
-        # Restore send button
+        # 恢复发送按钮
         widgets.sendButton.setEnabled(True)
         widgets.sendButton.setText("Send")
 
-        # Clean up thread
+        # 清理线程
         if self.ai_thread:
             self.ai_thread.quit()
             self.ai_thread.wait()
             self.ai_thread = None
 
-        # Clear current message reference
+        # 清除当前消息引用
+        self.current_ai_message = None
+
+    def handleAPIError(self, error_message):
+        """处理API错误"""
+        # 停止光标闪烁
+        self.stopCursorBlink()
+
+        # 显示错误消息
+        if self.current_ai_message:
+            self.current_ai_message.setText(f"❌ 错误: {error_message}")
+
+        # 恢复发送按钮
+        widgets.sendButton.setEnabled(True)
+        widgets.sendButton.setText("Send")
+
+        # 清理线程
+        if self.ai_thread:
+            self.ai_thread.quit()
+            self.ai_thread.wait()
+            self.ai_thread = None
+
         self.current_ai_message = None
 
     def startCursorBlink(self):
@@ -768,9 +977,32 @@ class MainWindow(QMainWindow):
         self.sendMessage()
 
     def clearChat(self):
-        """Clear chat and start new session"""
-        # This now acts as "New Chat" button
+        """清除对话"""
+        # 重置Dify会话ID
+        self.dify_conversation_id = None
+        # 调用原来的清除方法
         self.startNewChat()
+
+    def showFirstTimeSetup(self):
+        """首次使用设置提示"""
+        reply = QMessageBox.question(
+            self,
+            "Welcome to TravelMind",
+            "您还未配置Dify API密钥。\n\n"
+            "配置后即可使用AI助手功能，否则将使用测试模式。\n\n"
+            "是否现在配置？",
+            QMessageBox.Yes | QMessageBox.No
+        )
+
+        if reply == QMessageBox.Yes:
+            self.showAPISettings()
+
+    def showAPISettings(self):
+        """显示API设置对话框"""
+        dialog = APISettingsDialog(self)
+        if dialog.exec() == QDialog.Accepted:
+            # 配置已更新，重置会话
+            self.dify_conversation_id = None
 
     def clearChatUI(self):
         """Clear only the chat UI, not the data"""
@@ -934,6 +1166,137 @@ class MainWindow(QMainWindow):
         if self.chat_history and self.auto_save_enabled:
             self.autoSaveCurrentChat()
         event.accept()
+
+
+class APISettingsDialog(QDialog):
+    """API设置对话框"""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("API Settings")
+        self.setFixedSize(450, 350)
+        self.setupUI()
+        self.loadSettings()
+
+    def setupUI(self):
+        layout = QVBoxLayout(self)
+
+        # Dify API设置组
+        dify_group = QGroupBox("Dify API Configuration")
+        dify_layout = QVBoxLayout(dify_group)
+
+        # API密钥
+        key_layout = QHBoxLayout()
+        key_layout.addWidget(QLabel("API Key:"))
+        self.api_key_edit = QLineEdit()
+        self.api_key_edit.setEchoMode(QLineEdit.Password)
+        self.api_key_edit.setPlaceholderText("Enter your Dify API key")
+        key_layout.addWidget(self.api_key_edit)
+        dify_layout.addLayout(key_layout)
+
+        # 显示/隐藏密钥按钮
+        show_key_btn = QPushButton("Show/Hide")
+        show_key_btn.clicked.connect(self.togglePasswordVisibility)
+        key_layout.addWidget(show_key_btn)
+
+        # 基础URL
+        url_layout = QHBoxLayout()
+        url_layout.addWidget(QLabel("Base URL:"))
+        self.base_url_edit = QLineEdit()
+        self.base_url_edit.setPlaceholderText("https://api.dify.ai/v1")
+        url_layout.addWidget(self.base_url_edit)
+        dify_layout.addLayout(url_layout)
+
+        layout.addWidget(dify_group)
+
+        # 响应设置组
+        response_group = QGroupBox("Response Settings")
+        response_layout = QVBoxLayout(response_group)
+
+        # 流式输出
+        self.stream_checkbox = QCheckBox("Enable streaming output (typewriter effect)")
+        response_layout.addWidget(self.stream_checkbox)
+
+        # 打字速度
+        speed_layout = QHBoxLayout()
+        speed_layout.addWidget(QLabel("Typing speed:"))
+        self.speed_spinbox = QSpinBox()
+        self.speed_spinbox.setRange(10, 200)
+        self.speed_spinbox.setSuffix(" ms/char")
+        speed_layout.addWidget(self.speed_spinbox)
+        response_layout.addLayout(speed_layout)
+
+        layout.addWidget(response_group)
+
+        # 按钮
+        button_layout = QHBoxLayout()
+        self.test_button = QPushButton("Test Connection")
+        self.save_button = QPushButton("Save")
+        self.cancel_button = QPushButton("Cancel")
+
+        button_layout.addWidget(self.test_button)
+        button_layout.addStretch()
+        button_layout.addWidget(self.save_button)
+        button_layout.addWidget(self.cancel_button)
+
+        layout.addLayout(button_layout)
+
+        # 连接信号
+        self.test_button.clicked.connect(self.testConnection)
+        self.save_button.clicked.connect(self.saveSettings)
+        self.cancel_button.clicked.connect(self.reject)
+
+    def togglePasswordVisibility(self):
+        """切换密码可见性"""
+        if self.api_key_edit.echoMode() == QLineEdit.Password:
+            self.api_key_edit.setEchoMode(QLineEdit.Normal)
+        else:
+            self.api_key_edit.setEchoMode(QLineEdit.Password)
+
+    def loadSettings(self):
+        """加载设置"""
+        config = APIConfig.load_config()
+        self.api_key_edit.setText(config.get("dify_api_key", ""))
+        self.base_url_edit.setText(config.get("dify_base_url", "https://api.dify.ai/v1"))
+        self.stream_checkbox.setChecked(config.get("stream_enabled", True))
+        self.speed_spinbox.setValue(int(config.get("typing_speed", 0.03) * 1000))
+
+    def testConnection(self):
+        """测试API连接"""
+        api_key = self.api_key_edit.text().strip()
+        base_url = self.base_url_edit.text().strip() or "https://api.dify.ai/v1"
+
+        if not api_key:
+            QMessageBox.warning(self, "Error", "Please enter API key")
+            return
+
+        self.test_button.setEnabled(False)
+        self.test_button.setText("Testing...")
+
+        try:
+            client = DifyAPIClient(api_key, base_url)
+            # 发送测试消息
+            response = client.chat_completion_stream("Hello", user_id="test")
+            # 如果没有异常，说明连接成功
+            QMessageBox.information(self, "Success", "API connection test successful!")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"API connection test failed:\n{str(e)}")
+        finally:
+            self.test_button.setEnabled(True)
+            self.test_button.setText("Test Connection")
+
+    def saveSettings(self):
+        """保存设置"""
+        config = {
+            "dify_api_key": self.api_key_edit.text().strip(),
+            "dify_base_url": self.base_url_edit.text().strip() or "https://api.dify.ai/v1",
+            "stream_enabled": self.stream_checkbox.isChecked(),
+            "typing_speed": self.speed_spinbox.value() / 1000.0
+        }
+
+        APIConfig.save_config(config)
+        QMessageBox.information(self, "Success", "Settings saved successfully!")
+        self.accept()
 
 
 if __name__ == "__main__":

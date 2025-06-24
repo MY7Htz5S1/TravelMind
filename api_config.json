@@ -1,0 +1,6 @@
+{
+  "dify_api_key": "app-xxxxxxxxxxxxxxxx",
+  "dify_base_url": "https://api.dify.ai/v1",
+  "stream_enabled": true,
+  "typing_speed": 0.03
+}
