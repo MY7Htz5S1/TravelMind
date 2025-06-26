@@ -1095,7 +1095,7 @@ class Ui_MainWindow(object):
         icon3.addFile(u":/icons/images/icons/icon_maximize.png", QSize(), QIcon.Normal, QIcon.Off)
         self.maximizeRestoreAppBtn.setIcon(icon3)
         self.maximizeRestoreAppBtn.setIconSize(QSize(20, 20))
-
+        self.maximizeRestoreAppBtn.hide()
         self.horizontalLayout_2.addWidget(self.maximizeRestoreAppBtn)
 
         self.closeAppBtn = QPushButton(self.rightButtons)
