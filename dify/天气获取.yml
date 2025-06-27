@@ -1,0 +1,230 @@
+app:
+  description: ''
+  icon: 🤖
+  icon_background: '#FFEAD5'
+  mode: workflow
+  name: 天气获取
+  use_icon_as_answer_icon: false
+dependencies: []
+kind: app
+version: 0.3.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: false
+      fileUploadConfig:
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        image_file_size_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: start
+        targetType: code
+      id: 1750557167017-source-1750558133666-target
+      selected: false
+      source: '1750557167017'
+      sourceHandle: source
+      target: '1750558133666'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: end
+      id: 1750558133666-source-1750558187222-target
+      selected: false
+      source: '1750558133666'
+      sourceHandle: source
+      target: '1750558187222'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        desc: ''
+        selected: false
+        title: 开始
+        type: start
+        variables:
+        - label: start_time
+          max_length: 48
+          options: []
+          required: true
+          type: text-input
+          variable: start_time
+        - label: end_time
+          max_length: 48
+          options: []
+          required: true
+          type: text-input
+          variable: end_time
+        - label: city
+          max_length: 48
+          options: []
+          required: true
+          type: text-input
+          variable: destination
+      height: 141
+      id: '1750557167017'
+      position:
+        x: -9.598471689768814
+        y: 374
+      positionAbsolute:
+        x: -9.598471689768814
+        y: 374
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        code: "import requests\nimport json\n\n# 天气代码到中文描述的映射表\nWEATHER_CODE_MAP =\
+          \ {\n    0: \"晴天\",\n    1: \"晴间多云\",\n    2: \"多云\",\n    3: \"阴天\",\n\
+          \    45: \"雾\",\n    48: \"冻雾\",\n    51: \"小雨\",\n    53: \"中雨\",\n   \
+          \ 55: \"大雨\",\n    56: \"冻雨\",\n    57: \"强冻雨\",\n    61: \"小雨\",\n    63:\
+          \ \"中雨\",\n    65: \"大雨\",\n    66: \"冻雨\",\n    67: \"强冻雨\",\n    71: \"\
+          小雪\",\n    73: \"中雪\",\n    75: \"大雪\",\n    77: \"冰粒\",\n    80: \"小阵雨\"\
+          ,\n    81: \"中阵雨\",\n    82: \"大阵雨\",\n    85: \"小阵雪\",\n    86: \"大阵雪\"\
+          ,\n    95: \"雷暴\",\n    96: \"雷暴伴冰雹\",\n    99: \"强雷暴伴冰雹\"\n}\n\ndef weathercode_to_description(code:\
+          \ int) -> str:\n    \"\"\"将天气代码转换为中文描述\"\"\"\n    return WEATHER_CODE_MAP.get(code,\
+          \ \"未知天气\")\n\ndef main(city: str, start_date: str, end_date: str) -> dict:\n\
+          \    try:\n        # 1. 获取城市坐标\n        geo_url = f\"https://geocoding-api.open-meteo.com/v1/search?name={city}&count=1\"\
+          \n        geo_response = requests.get(geo_url)\n        geo_data = geo_response.json()\n\
+          \        \n        if not geo_data.get('results') or len(geo_data['results'])\
+          \ == 0:\n            return {'weather_summary': f\"抱歉，找不到城市 {city} 的地理信息。\"\
+          }\n        \n        location = geo_data['results'][0]\n        latitude\
+          \ = location['latitude']\n        longitude = location['longitude']\n\n\
+          \        # 2. 获取天气预报 - 增加weathercode请求\n        weather_url = f\"https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}\"\
+          \ \\\n                     f\"&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum\"\
+          \ \\\n                     f\"&start_date={start_date}&end_date={end_date}&timezone=auto\"\
+          \n        \n        weather_response = requests.get(weather_url)\n     \
+          \   weather_data = weather_response.json()\n\n        # 3. 检查天气数据是否有效\n\
+          \        if not weather_data.get('daily') or not weather_data['daily'].get('time'):\n\
+          \            return {'weather_summary': f\"抱歉，无法获取 {city} 在 {start_date}\
+          \ 到 {end_date} 的天气信息。\"}\n\n        daily_data = weather_data['daily']\n\
+          \        dates = daily_data['time']\n        weather_codes = daily_data['weathercode']\n\
+          \        temp_max = daily_data['temperature_2m_max']\n        temp_min =\
+          \ daily_data['temperature_2m_min']\n        precipitations = daily_data.get('precipitation_sum',\
+          \ [0]*len(dates))  # 降水量，默认为0\n        \n        # 4. 生成详细天气摘要\n       \
+          \ summary = f\"\U0001F4CD {city} {start_date} 至 {end_date} 天气预报：\\n\\n\"\
+          \n        \n        for i in range(len(dates)):\n            date = dates[i]\n\
+          \            weather_desc = weathercode_to_description(weather_codes[i])\n\
+          \            precipitation = precipitations[i]\n            \n         \
+          \   # 添加降水量的描述\n            precip_desc = \"\"\n            if precipitation\
+          \ > 0:\n                precip_desc = f\"，降水量 {precipitation}mm\"\n    \
+          \        \n            summary += (\n                f\"\U0001F4C5 {date}：{weather_desc}\\\
+          n\"\n                f\"\U0001F321️ 气温：{temp_min[i]}°C ~ {temp_max[i]}°C{precip_desc}\\\
+          n\\n\"\n            )\n        \n        # 添加整体天气趋势分析\n        summary +=\
+          \ \"\U0001F4A1 温馨提示：\"\n        avg_temp = (sum(temp_max) + sum(temp_min))\
+          \ / (2 * len(temp_max))\n        if avg_temp > 25:\n            summary\
+          \ += \"天气炎热，请注意防晒补水。\"\n        elif avg_temp < 5:\n            summary\
+          \ += \"天气寒冷，请注意保暖。\"\n        elif any(code in [51, 53, 55, 61, 63, 65,\
+          \ 80, 81, 82] for code in weather_codes):\n            summary += \"近期可能有降雨，出门请带伞。\"\
+          \n        else:\n            summary += \"天气舒适，适合户外活动。\"\n            \n\
+          \        return {'weather_summary': summary.strip()}\n\n    except Exception\
+          \ as e:\n        return {'weather_summary': f\"查询天气时发生未知错误: {str(e)}\"}"
+        code_language: python3
+        desc: ''
+        outputs:
+          weather_summary:
+            children: null
+            type: string
+        selected: false
+        title: 代码执行
+        type: code
+        variables:
+        - value_selector:
+          - '1750557167017'
+          - destination
+          variable: city
+        - value_selector:
+          - '1750557167017'
+          - start_time
+          variable: start_date
+        - value_selector:
+          - '1750557167017'
+          - end_time
+          variable: end_date
+      height: 53
+      id: '1750558133666'
+      position:
+        x: 582.3024842090218
+        y: 481.32788976443976
+      positionAbsolute:
+        x: 582.3024842090218
+        y: 481.32788976443976
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        desc: ''
+        outputs:
+        - value_selector:
+          - '1750558133666'
+          - weather_summary
+          variable: weather_summary
+        selected: true
+        title: 结束
+        type: end
+      height: 89
+      id: '1750558187222'
+      position:
+        x: 942.4751243580672
+        y: 330.2473311928256
+      positionAbsolute:
+        x: 942.4751243580672
+        y: 330.2473311928256
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    viewport:
+      x: 412.4388495028
+      y: 41.83756987187837
+      zoom: 0.38092914377679615

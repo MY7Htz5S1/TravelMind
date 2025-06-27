@@ -13,7 +13,7 @@ import requests
 import json
 from sseclient import SSEClient
 
-# 新增：语音和图片处理相关导入
+# 语音和图片处理相关导入
 import base64
 import tempfile
 import speech_recognition as sr
@@ -94,7 +94,7 @@ class StreamingChatMessage(QFrame):
         color: rgb(221, 221, 221);
         border-radius: 12px;
         padding: 12px 16px;
-        font-size: 16px;                                                    /* 字体大小 */
+        font-size: 24px;                                                    /* 字体大小 */
         font-family: "Microsoft YaHei UI", "PingFang SC", system-ui;       /* 字体类型 */
         font-weight: normal;                                                /* 字体粗细 */
         line-height: 1.5;                                                  /* 行高 */
@@ -112,7 +112,7 @@ class StreamingChatMessage(QFrame):
                 QLabel {
                     background-color: rgb(68, 71, 90);
                     border-radius: 15px;
-                    font-size: 16px;
+                    font-size: 24px;
                 }
             """)
             layout.addWidget(avatar)
@@ -126,7 +126,7 @@ class StreamingChatMessage(QFrame):
                     color: rgb(221, 221, 221);
                     border-radius: 12px;
                     padding: 10px 15px;
-                    font-size: 16px;                    /* 字体大小：14px -> 16px */
+                    font-size: 24px;                    /* 字体大小：14px -> 16px */
                     font-family: "Microsoft YaHei UI";  /* 字体：微软雅黑 */
                     font-weight: normal;                /* 字体粗细 */
                     line-height: 1.4;                  /* 行高：让文字更易读 */
@@ -188,7 +188,7 @@ class TypingIndicator(QFrame):
             QLabel {
                 background-color: rgb(68, 71, 90);
                 border-radius: 15px;
-                font-size: 16px;
+                font-size: 24px;
             }
         """)
         layout.addWidget(avatar)
@@ -343,39 +343,36 @@ class DifyAPIClient:
         return ext in image_exts
     
     
-    def extract_image_urls(self, response_text):
-        """提取不带签名的图片URL"""
-        # 查找所有可能的URL片段
-        pattern = r'(https?://[^\s"\'<]+)'
-        raw_urls = re.findall(pattern, response_text)
+    def extract_image_urls(self,response_text):
+        """提取图片URL（特别处理标签）"""
+        # 第一种模式：直接匹配标签中的src属性
+        img_pattern = r']*src\s*=\s*[\'"]([^\'"]+)[\'"]'
     
-        clean_urls = []
-        for url in raw_urls:
-            # 修复特殊格式问题
-            url = url.replace('%!F(MISSING)', '/').replace('%!F', '/')
-        
-            # 移除URL末尾的无效字符
-            url = re.sub(r'[?&]+$', '', url)
-        
-            # 仅保留有效的图片URL
-            if any(url.lower().endswith(ext) for ext in ['.png', '.jpg', '.jpeg', '.gif']):
-                clean_urls.append(url)
+        # 第二种模式：匹配裸URL（备用）
+        url_pattern = r'(https?://[^\s"\'<]+)'
     
-        return clean_urls
+    
+        found_urls = []
+    
+        # 先尝试提取标签中的URL
+        img_matches = re.findall(img_pattern, response_text, re.IGNORECASE)
+        for url in img_matches:
+            # 清理URL中的HTML实体和特殊字符
+            clean_url = url.replace('&amp;', '&').replace('&quot;', '"')
+            found_urls.append(clean_url)
+    
+        # 如果没找到标签，尝试普通URL匹配
+        if not found_urls:
+            url_matches = re.findall(url_pattern, response_text)
+            for url in url_matches:
+                # 只保留图片URL
+                if any(url.lower().endswith(ext) for ext in ['.png', '.jpg', '.jpeg', '.gif', '.webp']):
+                    found_urls.append(url)
+    
+        return found_urls
 
-    def clean_url(self, url):
-        """清理并修正URL"""
-        # 去除末尾的标点符号和空格
-        clean_url = re.sub(r'[.,;)\s]+$', '', url.strip())
+
     
-        # 处理不完整URL
-        clean_url = re.sub(r'\\.$', '', clean_url)
-    
-        # 移除常见多余字符
-        for char in ['"', "'", '`', '>', '<', '}']:
-            clean_url = clean_url.replace(char, '')
-        
-        return clean_url
     
 
 class SimpleVoiceThread(QThread):
@@ -954,6 +951,66 @@ class MainWindow(QMainWindow):
             
         self.generated_images = []  
 
+        self.setupHistoryListStyle()
+
+    def setupHistoryListStyle(self):
+        """设置历史列表样式"""
+        # 设置列表整体样式
+        widgets.historyList.setStyleSheet("""
+        QListWidget {
+                font-family: "Microsoft YaHei UI";
+                font-size: 16px;  /* 列表整体字体大小 */
+                background-color: rgb(40, 44, 52);
+                border: none;
+                outline: none;
+            }
+            QListWidget::item {
+                padding: 14px 10px;  /* 增加内边距 */
+                border-bottom: 1px solid rgb(55, 59, 68);
+            }
+            QListWidget::item:selected {
+                background-color: rgb(68, 71, 90);
+                color: rgb(221, 221, 221);
+            }
+            QListWidget::item:hover {
+                background-color: rgb(60, 64, 78);
+            }
+    """)
+        
+        # 设置按钮样式
+        buttons = [
+            widgets.loadChatButton, 
+            widgets.deleteChatButton, 
+            widgets.clearHistoryButton
+            ]
+        
+        for btn in buttons:
+            btn.setMinimumSize(140, 50)  # 增加按钮尺寸
+            btn.setMaximumSize(180, 60)
+            btn.setStyleSheet("""
+                QPushButton {
+                    font-family: "Microsoft YaHei UI";
+                    font-size: 16px;  /* 按钮文字大小 */
+                    font-weight: 500;
+                    color: rgb(221, 221, 221);
+                    background-color: rgb(68, 71, 90);
+                    border-radius: 8px;
+                    padding: 12px 20px;
+                    min-width: 140px;
+                    min-height: 50px;
+                }
+                QPushButton:hover {
+                    background-color: rgb(78, 81, 100);
+                }
+                QPushButton:pressed {
+                    background-color: rgb(58, 61, 80);
+                }
+                QPushButton:disabled {
+                    background-color: rgb(50, 53, 65);
+                    color: rgb(150, 150, 150);
+                }
+            """)
+
     def init_dify_integration(self):
             """初始化Dify集成"""
             self.dify_conversation_id = None
@@ -1212,7 +1269,7 @@ class MainWindow(QMainWindow):
             # 文件名标签
             name_label = QLabel(filename)
             name_label.setAlignment(Qt.AlignCenter)
-            name_label.setStyleSheet("font-size: 10px;")
+            name_label.setStyleSheet("font-size: 15px;")
             name_label.setWordWrap(True)
             layout.addWidget(name_label)
             
@@ -1291,7 +1348,7 @@ class MainWindow(QMainWindow):
             if not pixmap.isNull():
                 # 设置最大尺寸
                 if pixmap.width() > 600 or pixmap.height() > 400:
-                    pixmap = pixmap.scaled(600, 400, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                    pixmap = pixmap.scaled(300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation)
                 
                 # 创建图片标签
                 image_label = QLabel()
@@ -1314,7 +1371,7 @@ class MainWindow(QMainWindow):
                 action_layout = QHBoxLayout()
                 action_layout.setSpacing(8)
                 
-                # 查看按钮
+                '''# 查看按钮
                 view_btn = QPushButton("查看图片")
                 view_btn.setFixedSize(90, 30)
                 view_btn.setStyleSheet("""
@@ -1328,7 +1385,7 @@ class MainWindow(QMainWindow):
                 """)
                 view_btn.clicked.connect(lambda _, p=image_path: self.openImage(p))
                 action_layout.addWidget(view_btn)
-                
+                '''
                 # 保存按钮
                 save_btn = QPushButton("另存为")
                 save_btn.setFixedSize(90, 30)
@@ -1438,11 +1495,12 @@ class MainWindow(QMainWindow):
         widgets.sendButton.setText("Send")
         widgets.chatInputArea.setPlaceholderText(
             "Please enter your travel question, e.g.: Recommend a 3-day Shanghai tour...")
+        
         widgets.welcome_message.setText(
             "👋 Welcome to TravelMind AI Assistant!\n\n"
             "I can help you plan travel routes, recommend attractions, check weather information, and more.\n"
             "Please enter your question below to start a conversation.")
-
+        widgets.chatInputArea.setStyleSheet("font-size: 24px;")
         suggestions = ["Shanghai 3-day tour", "Xiamen food guide", "Beijing family trip", "Chengdu weekend tour"]
         for i, btn in enumerate(widgets.suggestion_buttons):
             if i < len(suggestions):
@@ -1861,7 +1919,9 @@ class MainWindow(QMainWindow):
             try:
                 # 提取图片URL
                 image_urls = self.client.extract_image_urls(original_content) if self.client else []
-                
+                print("提取到的图片URL:")
+                for i, url in enumerate(image_urls):
+                    print(f"{i+1}. {url}")
                 # 下载图片
                 if image_urls:
                     self.download_images(image_urls)
@@ -1987,15 +2047,15 @@ class MainWindow(QMainWindow):
                 
                 file_path = os.path.join(download_dir, filename)
             
-                # 添加阿里云OSS域名（如果缺少）
+                '''# 添加阿里云OSS域名（如果缺少）
                 if "oss-cn-shanghai.aliyuncs.com" not in url:
                     path = urlparse(url).path
                     oss_url = f"https://sc-maas.oss-cn-shanghai.aliyuncs.com{path}"
                 else:
-                    oss_url = url
+                    oss_url = url'''
                 
                 # 下载图片
-                response = requests.get(oss_url, stream=True, timeout=30)
+                response = requests.get(url, stream=True, timeout=30)
             
                 if response.status_code == 200:
                     with open(file_path, "wb") as f:
@@ -2006,7 +2066,7 @@ class MainWindow(QMainWindow):
                     self.addImageToChat(file_path)
                     self.generated_images.append(file_path)
                 else:
-                    print(f"图片下载失败: {oss_url} - 状态码 {response.status_code}")
+                    print(f"图片下载失败: {url} - 状态码 {response.status_code}")
                 
             except Exception as e:
                 print(f"图片处理错误: {str(e)}")
