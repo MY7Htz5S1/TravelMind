@@ -1,0 +1,191 @@
+app:
+  description: ''
+  icon: 🤖
+  icon_background: '#FFEAD5'
+  mode: workflow
+  name: 图片预处理
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/siliconflow:0.0.15@775950e2071600bd3ba0415ec306c1b1582bc4a2a94688d642f627d112d87cd3
+kind: app
+version: 0.3.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: false
+      fileUploadConfig:
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        image_file_size_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInLoop: false
+        sourceType: start
+        targetType: llm
+      id: 1750686654483-source-1750686661098-target
+      source: '1750686654483'
+      sourceHandle: source
+      target: '1750686661098'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: end
+      id: 1750686661098-source-1750686694168-target
+      source: '1750686661098'
+      sourceHandle: source
+      target: '1750686694168'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        desc: ''
+        selected: false
+        title: 开始
+        type: start
+        variables:
+        - allowed_file_extensions: []
+          allowed_file_types:
+          - image
+          allowed_file_upload_methods:
+          - local_file
+          - remote_url
+          label: pic_list
+          max_length: 5
+          options: []
+          required: false
+          type: file-list
+          variable: pic_list
+      height: 89
+      id: '1750686654483'
+      position:
+        x: -99
+        y: 608
+      positionAbsolute:
+        x: -99
+        y: 608
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: ''
+        model:
+          completion_params: {}
+          mode: chat
+          name: Qwen/Qwen2.5-VL-72B-Instruct
+          provider: langgenius/siliconflow/siliconflow
+        prompt_template:
+        - id: aa729073-0ff1-4b56-845c-bdd4062c0d5e
+          role: system
+          text: '##任务：
+
+            分析所有图片，找出与所有图片都相关一个城市
+
+            若没有提供图片，输出no
+
+            ##要求：
+
+            只输出城市名称
+
+            '
+        selected: false
+        title: LLM
+        type: llm
+        variables: []
+        vision:
+          configs:
+            detail: high
+            variable_selector:
+            - '1750686654483'
+            - pic_list
+          enabled: true
+      height: 89
+      id: '1750686661098'
+      position:
+        x: 414.9989340751531
+        y: 599.400638622911
+      positionAbsolute:
+        x: 414.9989340751531
+        y: 599.400638622911
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        desc: ''
+        outputs:
+        - value_selector:
+          - '1750686661098'
+          - text
+          variable: output
+        selected: false
+        title: 结束
+        type: end
+      height: 89
+      id: '1750686694168'
+      position:
+        x: 839.7977434539077
+        y: 608
+      positionAbsolute:
+        x: 839.7977434539077
+        y: 608
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    viewport:
+      x: 304.64480571005237
+      y: -56.9902545418968
+      zoom: 0.5743491774985184

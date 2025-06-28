@@ -1,0 +1,2509 @@
+app:
+  description: ''
+  icon: 🤖
+  icon_background: '#FFEAD5'
+  mode: advanced-chat
+  name: 旅游助手
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/siliconflow:0.0.15@775950e2071600bd3ba0415ec306c1b1582bc4a2a94688d642f627d112d87cd3
+kind: app
+version: 0.3.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - remote_url
+      - local_file
+      enabled: true
+      fileUploadConfig:
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        image_file_size_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      config:
+        inputs_config:
+          enabled: true
+          preset_response: 我只是一个旅游计划助手，不能为您提供这方面的帮助
+        keywords: '天安门事件
+
+          六四
+
+          文革
+
+          大跃进
+
+          法轮功
+
+          达赖喇嘛
+
+          新疆独立
+
+          西藏独立
+
+          台湾独立
+
+          香港独立
+
+          民主运动
+
+          普选
+
+          宪政
+
+          独裁
+
+          专制
+
+          维权律师
+
+          光复香港
+
+          时代革命
+
+          零八宪章
+
+          茉莉花革命
+
+          习近平
+
+          维尼
+
+          习包子
+
+          总加速师
+
+          扛麦郎
+
+          蛤蟆
+
+          膜蛤
+
+          影帝
+
+          毛腊肉
+
+          蛋炒饭
+
+          操
+
+          肏
+
+          逼
+
+          裸聊
+
+          约炮
+
+          嫖娼
+
+          卖淫
+
+          小姐
+
+          AV女优
+
+          草榴
+
+          淫秽
+
+          黄片
+
+          撸管
+
+          精液
+
+          强奸
+
+          乱伦
+
+          足交
+
+          口交
+
+          肛交
+
+          SM
+
+          屠杀
+
+          暗杀
+
+          自焚
+
+          自杀
+
+          爆炸
+
+          恐怖主义
+
+          ISIS
+
+          基地组织
+
+          支那
+
+          黑鬼
+
+          穆斯林猪
+
+          杀人
+
+          虐待
+
+          血腥
+
+          割腕
+
+          冰毒
+
+          K粉
+
+          海洛因
+
+          大麻
+
+          吸毒
+
+          赌博
+
+          六合彩
+
+          洗钱
+
+          办证
+
+          枪支
+
+          军火
+
+          炸药
+
+          走私
+
+          传销
+
+          迷药
+
+          白纸革命
+
+          铁链女
+
+          毒奶粉
+
+          上访
+
+          维权
+
+          群体事件
+
+          游行示威
+
+          翻墙
+
+          VPN
+
+          科学上网
+
+          代理
+
+          GFW
+
+          自由门
+
+          电报
+
+          Tor
+
+          动态网
+
+          公民记者
+
+          寻衅滋事
+
+          喝茶
+
+          敏感词'
+        outputs_config:
+          enabled: false
+          preset_response: 出现高危内容，生成已停止
+      enabled: true
+      type: keywords
+    speech_to_text:
+      enabled: true
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: start
+        targetType: code
+      id: 1750566034988-source-1750664385968-target
+      selected: false
+      source: '1750566034988'
+      sourceHandle: source
+      target: '1750664385968'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1750749528594'
+        sourceType: if-else
+        targetType: answer
+      id: 1750749691654-ff83544e-0de7-4d4f-99a0-df344a69a306-1750749818465-target
+      selected: false
+      source: '1750749691654'
+      sourceHandle: ff83544e-0de7-4d4f-99a0-df344a69a306
+      target: '1750749818465'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1750749528594'
+        sourceType: code
+        targetType: if-else
+      id: 1750749617881-source-1750749691654-target
+      selected: false
+      source: '1750749617881'
+      sourceHandle: source
+      target: '1750749691654'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1750749528594'
+        sourceType: assigner
+        targetType: code
+      id: 1750749936919-source-1750749617881-target
+      selected: false
+      source: '1750749936919'
+      sourceHandle: source
+      target: '1750749617881'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1750749528594'
+        sourceType: if-else
+        targetType: assigner
+      id: 1750749691654-true-1750760391655-target
+      selected: false
+      source: '1750749691654'
+      sourceHandle: 'true'
+      target: '1750760391655'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1750749528594'
+        sourceType: assigner
+        targetType: loop-end
+      id: 1750760391655-source-1750749811886-target
+      selected: false
+      source: '1750760391655'
+      sourceHandle: source
+      target: '1750749811886'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1750749528594'
+        sourceType: answer
+        targetType: loop-end
+      id: 1750749818465-source-1750760416963-target
+      selected: false
+      source: '1750749818465'
+      sourceHandle: source
+      target: '1750760416963'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInLoop: false
+        sourceType: code
+        targetType: if-else
+      id: 1750664385968-source-1750760476662-target
+      selected: false
+      source: '1750664385968'
+      sourceHandle: source
+      target: '1750760476662'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: answer
+      id: 1750760476662-true-1750665029506-target
+      selected: false
+      source: '1750760476662'
+      sourceHandle: 'true'
+      target: '1750665029506'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: loop
+        targetType: if-else
+      id: 1750749528594-source-1750760523849-target
+      selected: false
+      source: '1750749528594'
+      sourceHandle: source
+      target: '1750760523849'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: if-else
+        targetType: answer
+      id: 1750760523849-false-1750760551318-target
+      selected: false
+      source: '1750760523849'
+      sourceHandle: 'false'
+      target: '1750760551318'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: parameter-extractor
+      id: 1750760523849-true-1750595109034-target
+      selected: false
+      source: '1750760523849'
+      sourceHandle: 'true'
+      target: '1750595109034'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1750749528594'
+        sourceType: llm
+        targetType: assigner
+      id: 1750761477762-source-1750749936919-target
+      selected: false
+      source: '1750761477762'
+      sourceHandle: source
+      target: '1750749936919'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1750749528594'
+        sourceType: loop-start
+        targetType: llm
+      id: 1750749528594start-source-1750761477762-target
+      selected: false
+      source: 1750749528594start
+      sourceHandle: source
+      target: '1750761477762'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1750749528594'
+        sourceType: if-else
+        targetType: answer
+      id: 1750749691654-0d081dfc-8595-4bc6-9469-26a871b8b9f8-1750762498203-target
+      selected: false
+      source: '1750749691654'
+      sourceHandle: 0d081dfc-8595-4bc6-9469-26a871b8b9f8
+      target: '1750762498203'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1750749528594'
+        sourceType: answer
+        targetType: loop-end
+      id: 1750762498203-source-1750760418756-target
+      selected: false
+      source: '1750762498203'
+      sourceHandle: source
+      target: '1750760418756'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: tool
+        targetType: loop
+      id: 1750762998126-source-1750749528594-target
+      selected: false
+      source: '1750762998126'
+      sourceHandle: source
+      target: '1750749528594'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: tool
+      id: 1750760476662-false-1750762998126-target
+      selected: false
+      source: '1750760476662'
+      sourceHandle: 'false'
+      target: '1750762998126'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1750749528594'
+        sourceType: llm
+        targetType: answer
+      id: 1750761477762-fail-branch-1750765130092-target
+      selected: false
+      source: '1750761477762'
+      sourceHandle: fail-branch
+      target: '1750765130092'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInLoop: false
+        sourceType: parameter-extractor
+        targetType: answer
+      id: 17508149124980-source-1750849985155-target
+      source: '17508149124980'
+      sourceHandle: source
+      target: '1750849985155'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: parameter-extractor
+        targetType: answer
+      id: 1750814820840-source-1750849985155-target
+      source: '1750814820840'
+      sourceHandle: source
+      target: '1750849985155'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: parameter-extractor
+        targetType: answer
+      id: 17508149131760-source-1750849985155-target
+      source: '17508149131760'
+      sourceHandle: source
+      target: '1750849985155'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: parameter-extractor
+      id: 17508508619110-source-17507720474250-target
+      source: '17508508619110'
+      sourceHandle: source
+      target: '17507720474250'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: parameter-extractor
+        targetType: tool
+      id: 1750595109034-source-1750852127493-target
+      source: '1750595109034'
+      sourceHandle: source
+      target: '1750852127493'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: tool
+        targetType: code
+      id: 1750852127493-source-1750848766038-target
+      source: '1750852127493'
+      sourceHandle: source
+      target: '1750848766038'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: tool
+        targetType: answer
+      id: 1750852127493-fail-branch-1750764982275-target
+      source: '1750852127493'
+      sourceHandle: fail-branch
+      target: '1750764982275'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: code
+      id: 1750848766038-source-1750927347296-target
+      source: '1750848766038'
+      sourceHandle: source
+      target: '1750927347296'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: answer
+      id: 1750927347296-source-1750849985155-target
+      source: '1750927347296'
+      sourceHandle: source
+      target: '1750849985155'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: tool
+      id: 1750760476662-false-1750988214364-target
+      source: '1750760476662'
+      sourceHandle: 'false'
+      target: '1750988214364'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: tool
+        targetType: loop
+      id: 1750988214364-source-1750749528594-target
+      source: '1750988214364'
+      sourceHandle: source
+      target: '1750749528594'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: tool
+        targetType: answer
+      id: 1750988214364-fail-branch-1750765181990-target
+      source: '1750988214364'
+      sourceHandle: fail-branch
+      target: '1750765181990'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: parameter-extractor
+        targetType: llm
+      id: 1750595109034-source-17508508619110-target
+      source: '1750595109034'
+      sourceHandle: source
+      target: '17508508619110'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: parameter-extractor
+        targetType: tool
+      id: 17507720474250-source-1750988276885-target
+      source: '17507720474250'
+      sourceHandle: source
+      target: '1750988276885'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: tool
+        targetType: parameter-extractor
+      id: 1750988276885-source-17508149124980-target
+      source: '1750988276885'
+      sourceHandle: source
+      target: '17508149124980'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: parameter-extractor
+        targetType: tool
+      id: 17507720474250-source-17509883117330-target
+      source: '17507720474250'
+      sourceHandle: source
+      target: '17509883117330'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: tool
+        targetType: parameter-extractor
+      id: 17509883117330-source-1750814820840-target
+      source: '17509883117330'
+      sourceHandle: source
+      target: '1750814820840'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: parameter-extractor
+        targetType: tool
+      id: 17507720474250-source-17509883418240-target
+      source: '17507720474250'
+      sourceHandle: source
+      target: '17509883418240'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: tool
+        targetType: parameter-extractor
+      id: 17509883418240-source-17508149131760-target
+      source: '17509883418240'
+      sourceHandle: source
+      target: '17508149131760'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        desc: ''
+        selected: false
+        title: 开始
+        type: start
+        variables: []
+      height: 53
+      id: '1750566034988'
+      position:
+        x: -843.538172292781
+        y: -543.9115148986634
+      positionAbsolute:
+        x: -843.538172292781
+        y: -543.9115148986634
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        desc: ''
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: Qwen/Qwen2.5-72B-Instruct
+          provider: langgenius/siliconflow/siliconflow
+        parameters:
+        - description: 用户旅行的开始时间
+          name: start_time
+          required: false
+          type: string
+        - description: 用户旅行的结束时间
+          name: end_time
+          required: false
+          type: string
+        - description: 用户的旅行目的地
+          name: destination
+          required: false
+          type: string
+        - description: 用户旅行的持续时间
+          name: total_time
+          required: false
+          type: number
+        - description: 用户的预算
+          name: budget
+          required: false
+          type: number
+        - description: 用户的特殊要求
+          name: specific_plan
+          required: false
+          type: string
+        - description: 用户的出发地
+          name: start_site
+          required: false
+          type: string
+        query:
+        - '1750749528594'
+        - inclusion
+        reasoning_mode: prompt
+        selected: false
+        title: 参数提取器 4
+        type: parameter-extractor
+        variables: []
+        vision:
+          enabled: false
+      height: 89
+      id: '1750595109034'
+      position:
+        x: 1197.8011547277142
+        y: -511.70948268451866
+      positionAbsolute:
+        x: 1197.8011547277142
+        y: -511.70948268451866
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        code: "import json\nimport re\n\n# 1. 输入长度上限\nMAX_INPUT_LENGTH = 2000\n\n\
+          # 2. 注入关键词/短语列表 (小写)\n# 涵盖了常见的指令、角色扮演、越狱等意图\nINJECTION_KEYWORDS = [\n  \
+          \  # English Keywords\n    \"ignore previous instructions\", \"ignore all\
+          \ prior instructions\", \"disregard the above\",\n    \"forget the preceding\"\
+          , \"you are now\", \"act as\", \"respond as\", \"roleplay as\",\n    \"\
+          system prompt\", \"your instructions are\", \"secret code\", \"confidential\
+          \ information\",\n    \"jailbreak\", \"pwned\", \"hacked\", \"malicious\"\
+          ,\n    \n    # Chinese Keywords\n    \"忽略前面的指令\", \"忽略之前的所有指令\", \"忽略以上内容\"\
+          , \"忘记你之前的身份\",\n    \"你现在是\", \"你扮演\", \"作为\", \"你的新身份是\", \"角色扮演\",\n\
+          \    \"系统提示\", \"你的指令是\", \"秘密\", \"机密\", \"绝密\", \"核心代码\",\n    \"越狱\"\
+          , \"破解\", \"沙盒\"\n]\n\n# 3. 注入行为的正则表达式模式\n# 用于匹配更泛化的命令式语句\nINJECTION_PATTERNS\
+          \ = [\n    re.compile(r'ignore.*instructions', re.IGNORECASE),\n    re.compile(r'disregard.*above',\
+          \ re.IGNORECASE),\n    re.compile(r'^(you are now|act as|respond as)', re.IGNORECASE),\n\
+          \    re.compile(r'忽略.*指令', re.IGNORECASE),\n    re.compile(r'忘记.*设定', re.IGNORECASE),\n\
+          \    re.compile(r'^你(现在)?是', re.IGNORECASE)\n]\n\n# --- 主函数 ---\n\ndef main(user_input:\
+          \ str)->dict:\n    if not isinstance(user_input, str) or not user_input:\n\
+          \        return {\n            \"is_safe\": 1,\n            \"reason\":\
+          \ \"Input is empty or not a string.\"\n        }\n\n    # 1. 检查输入长度\n  \
+          \  if len(user_input) > MAX_INPUT_LENGTH:\n        return {\n          \
+          \  \"is_safe\": 0,\n            \"reason\": f\"Input length ({len(user_input)})\
+          \ exceeds maximum of {MAX_INPUT_LENGTH}.\"\n        }\n        \n    normalized_input\
+          \ = user_input.lower().strip()\n\n    # 2. 检查关键词\n    for keyword in INJECTION_KEYWORDS:\n\
+          \        if keyword in normalized_input:\n            return {\n       \
+          \         \"is_safe\": 0,\n                \"reason\": f\"Unsafe keyword\
+          \ detected: '{keyword}'.\"\n            }\n            \n    # 3. 检查正则表达式模式\n\
+          \    for pattern in INJECTION_PATTERNS:\n        if pattern.search(normalized_input):\n\
+          \            return {\n                \"is_safe\": 0,\n               \
+          \ \"reason\": f\"Unsafe pattern detected: '{pattern.pattern}'.\"\n     \
+          \       }\n\n    # 如果所有检查都通过\n    return {\n        \"is_safe\": 1,\n  \
+          \      \"reason\": \"Input passed all security checks.\"\n    }"
+        code_language: python3
+        desc: ''
+        outputs:
+          is_safe:
+            children: null
+            type: number
+          reason:
+            children: null
+            type: string
+        selected: false
+        title: 代码执行 2
+        type: code
+        variables:
+        - value_selector:
+          - sys
+          - query
+          variable: user_input
+      height: 53
+      id: '1750664385968'
+      position:
+        x: -726.0786361936823
+        y: -368.00360622921403
+      positionAbsolute:
+        x: -726.0786361936823
+        y: -368.00360622921403
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        answer: 我无法回答这个内容，请输入合规的问题让我回答。
+        desc: ''
+        selected: false
+        title: 直接回复 2
+        type: answer
+        variables: []
+      height: 117
+      id: '1750665029506'
+      position:
+        x: 19.960601863979832
+        y: -596.9196083340154
+      positionAbsolute:
+        x: 19.960601863979832
+        y: -596.9196083340154
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        break_conditions: []
+        desc: ''
+        error_handle_mode: terminated
+        height: 459
+        logical_operator: and
+        loop_count: 3
+        loop_variables:
+        - id: f94ed5a2-87a5-415a-826e-54b105c17ae5
+          label: inclusion
+          value: 初始
+          value_type: constant
+          var_type: string
+        - id: d6027f6d-4b10-4b63-874c-902ae0592626
+          label: i
+          value: '0'
+          value_type: constant
+          var_type: number
+        selected: false
+        start_node_id: 1750749528594start
+        title: 输入预处理
+        type: loop
+        width: 1326
+      height: 459
+      id: '1750749528594'
+      position:
+        x: 31.58688890284361
+        y: 7.323072004841777
+      positionAbsolute:
+        x: 31.58688890284361
+        y: 7.323072004841777
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 1326
+      zIndex: 1
+    - data:
+        desc: ''
+        isInLoop: true
+        selected: false
+        title: ''
+        type: loop-start
+      draggable: false
+      height: 48
+      id: 1750749528594start
+      parentId: '1750749528594'
+      position:
+        x: 24
+        y: 68
+      positionAbsolute:
+        x: 55.58688890284361
+        y: 75.32307200484178
+      selectable: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom-loop-start
+      width: 44
+      zIndex: 1002
+    - data:
+        code: "import json\nfrom datetime import datetime\n\ndef main(test_text: str)\
+          \ -> int:\n    def is_valid_date_format(date_string: str) -> bool:\n   \
+          \     try:\n            datetime.strptime(date_string, '%Y-%m-%d')\n   \
+          \         return True\n        except ValueError:\n            return False\n\
+          \    required_keys = [\n        \"start_time\", \"end_time\", \"total_time\"\
+          , \"start_site\",\n        \"budget\", \"destination\"\n    ]\n\n    try:\n\
+          \        data = json.loads(test_text)\n    except json.JSONDecodeError:\n\
+          \        return {\"flag\": 0}\n\n    # 1. 检查所有必需的键是否存在\n    for it in required_keys:\n\
+          \        if it not in data:\n            return {'flag':0}\n        \n \
+          \   if data['start_time']=='无' or data['end_time']=='无' or data['total_time']==0:\n\
+          \        return {'flag':1}\n    \n    if data['destination']=='no':\n  \
+          \      return {'flag':2}\n    # 2. 逐个验证字段的格式和类型\n    if not is_valid_date_format(data[\"\
+          start_time\"]):\n        return {'flag':3}\n        \n    if not is_valid_date_format(data[\"\
+          end_time\"]):\n        return {'flag':4}\n\n    if not isinstance(data[\"\
+          total_time\"], int):\n        return {'flag':5}\n\n    # 预算、目的地和特殊计划通常是字符串\n\
+          \    if not isinstance(data[\"budget\"], (str, int, float)):\n        return\
+          \ {'flag':6}   \n    if not isinstance(data[\"destination\"], str):\n  \
+          \      return {'flag':7}\n    return {'flag':8}"
+        code_language: python3
+        desc: ''
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1750749528594'
+        outputs:
+          flag:
+            children: null
+            type: number
+        selected: false
+        title: 代码执行 4
+        type: code
+        variables:
+        - value_selector:
+          - '1750749528594'
+          - inclusion
+          variable: test_text
+      height: 53
+      id: '1750749617881'
+      parentId: '1750749528594'
+      position:
+        x: 461.29014815633343
+        y: 364.2895139580731
+      positionAbsolute:
+        x: 492.87703705917704
+        y: 371.61258596291486
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+      zIndex: 1002
+    - data:
+        cases:
+        - case_id: 'true'
+          conditions:
+          - comparison_operator: '='
+            id: 8ee02782-8b9e-4e79-b2b3-f428c523b05d
+            numberVarType: constant
+            value: '8'
+            varType: number
+            variable_selector:
+            - '1750749617881'
+            - flag
+          id: 'true'
+          logical_operator: and
+        - case_id: ff83544e-0de7-4d4f-99a0-df344a69a306
+          conditions:
+          - comparison_operator: '='
+            id: b25652b9-e05a-4c25-a9da-8140dd4dfa37
+            value: '1'
+            varType: number
+            variable_selector:
+            - '1750749617881'
+            - flag
+          id: ff83544e-0de7-4d4f-99a0-df344a69a306
+          logical_operator: and
+        - case_id: 0d081dfc-8595-4bc6-9469-26a871b8b9f8
+          conditions:
+          - comparison_operator: '='
+            id: b8629750-14a6-4f6f-a13c-9abee2dda08e
+            value: '2'
+            varType: number
+            variable_selector:
+            - '1750749617881'
+            - flag
+          id: 0d081dfc-8595-4bc6-9469-26a871b8b9f8
+          logical_operator: and
+        desc: ''
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1750749528594'
+        selected: false
+        title: 条件分支 3
+        type: if-else
+      height: 221
+      id: '1750749691654'
+      parentId: '1750749528594'
+      position:
+        x: 485.02480259131926
+        y: 65
+      positionAbsolute:
+        x: 516.6116914941629
+        y: 72.32307200484178
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+      zIndex: 1002
+    - data:
+        desc: ''
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1750749528594'
+        selected: false
+        title: 退出循环
+        type: loop-end
+      height: 53
+      id: '1750749811886'
+      parentId: '1750749528594'
+      position:
+        x: 1062.4829778737321
+        y: 75.5958844134304
+      positionAbsolute:
+        x: 1094.0698667765757
+        y: 82.91895641827217
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom-simple
+      width: 244
+      zIndex: 1002
+    - data:
+        answer: 请提供您的旅游时间。(什么时候出发+什么时候返程，或提供您旅游的天数)。
+        desc: ''
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1750749528594'
+        selected: false
+        title: 直接回复 4
+        type: answer
+        variables: []
+      height: 133
+      id: '1750749818465'
+      parentId: '1750749528594'
+      position:
+        x: 765.0862030705894
+        y: 162.1067880200938
+      positionAbsolute:
+        x: 796.673091973433
+        y: 169.42986002493558
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+      zIndex: 1002
+    - data:
+        desc: ''
+        isInIteration: false
+        isInLoop: true
+        items:
+        - input_type: variable
+          operation: over-write
+          value:
+          - '1750761477762'
+          - text
+          variable_selector:
+          - '1750749528594'
+          - inclusion
+          write_mode: over-write
+        loop_id: '1750749528594'
+        selected: false
+        title: 变量赋值
+        type: assigner
+        version: '2'
+      height: 87
+      id: '1750749936919'
+      parentId: '1750749528594'
+      position:
+        x: 225.68640614165065
+        y: 65
+      positionAbsolute:
+        x: 257.27329504449426
+        y: 72.32307200484178
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+      zIndex: 1002
+    - data:
+        desc: ''
+        isInIteration: false
+        isInLoop: true
+        items:
+        - input_type: constant
+          operation: set
+          value: 1
+          variable_selector:
+          - '1750749528594'
+          - i
+          write_mode: over-write
+        loop_id: '1750749528594'
+        selected: false
+        title: 变量赋值 2
+        type: assigner
+        version: '2'
+      height: 87
+      id: '1750760391655'
+      parentId: '1750749528594'
+      position:
+        x: 760.4294645185367
+        y: 65
+      positionAbsolute:
+        x: 792.0163534213804
+        y: 72.32307200484178
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+      zIndex: 1002
+    - data:
+        desc: ''
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1750749528594'
+        selected: false
+        title: 退出循环 2
+        type: loop-end
+      height: 53
+      id: '1750760416963'
+      parentId: '1750749528594'
+      position:
+        x: 1045.3338498500239
+        y: 172.76075954779122
+      positionAbsolute:
+        x: 1076.9207387528675
+        y: 180.083831552633
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom-simple
+      width: 244
+      zIndex: 1002
+    - data:
+        desc: ''
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1750749528594'
+        selected: false
+        title: 退出循环 3
+        type: loop-end
+      height: 53
+      id: '1750760418756'
+      parentId: '1750749528594'
+      position:
+        x: 1066
+        y: 345.0603483757429
+      positionAbsolute:
+        x: 1097.5868889028436
+        y: 352.38342038058465
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom-simple
+      width: 244
+      zIndex: 1002
+    - data:
+        cases:
+        - case_id: 'true'
+          conditions:
+          - comparison_operator: '='
+            id: fc53613a-1d19-45f7-8be5-9a64f55846e7
+            value: '0'
+            varType: number
+            variable_selector:
+            - '1750664385968'
+            - is_safe
+          id: 'true'
+          logical_operator: and
+        desc: ''
+        selected: false
+        title: 条件分支 2
+        type: if-else
+      height: 125
+      id: '1750760476662'
+      position:
+        x: -409.1448606952355
+        y: -543.9115148986634
+      positionAbsolute:
+        x: -409.1448606952355
+        y: -543.9115148986634
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        cases:
+        - case_id: 'true'
+          conditions:
+          - comparison_operator: '='
+            id: 271694cb-af41-457d-ad06-6bba7e2c91a0
+            value: '1'
+            varType: number
+            variable_selector:
+            - '1750749528594'
+            - i
+          id: 'true'
+          logical_operator: and
+        desc: ''
+        selected: false
+        title: 条件分支 3
+        type: if-else
+      height: 125
+      id: '1750760523849'
+      position:
+        x: 888.5456615984284
+        y: -359.11774974850766
+      positionAbsolute:
+        x: 888.5456615984284
+        y: -359.11774974850766
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        answer: '
+
+          请您重新输入。'
+        desc: ''
+        selected: false
+        title: 直接回复 6
+        type: answer
+        variables: []
+      height: 101
+      id: '1750760551318'
+      position:
+        x: 1230.6799284108615
+        y: -291.0846725881264
+      positionAbsolute:
+        x: 1230.6799284108615
+        y: -291.0846725881264
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: ''
+        error_strategy: fail-branch
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1750749528594'
+        memory:
+          query_prompt_template: 根据{{#sys.query#}}来总结，若无法总结出全部信息，则参考之前的输入
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: false
+            size: 50
+        model:
+          completion_params: {}
+          mode: chat
+          name: Qwen/Qwen2.5-72B-Instruct
+          provider: langgenius/siliconflow/siliconflow
+        prompt_template:
+        - id: 261add69-515d-4c9c-8193-b8f67ee59e2b
+          role: system
+          text: "##角色：用户需求概括者\n###技能：\n- 精通对于用户需求的概括和生成并修改用户旅行计划的概括\n- 精通使用Markdown语法生成结构化文本\n\
+            ### 目标：\n- 全面和详细的概括用户的旅行信息。\n\n###强调：\n禁止捏造任何数据，不要猜测用户想法\n###输出示例：\n你的输出必须严格遵循以下规则：\
+            \ 返回一个 JSON 对象。第一行绝对不可以输出json,直接开始输出该对象的内容，必须包含下面要求中的键，其中\"start_time\"\
+            ,\"end_time\",\"destination\",\"specific_plan\"的type为string,其中\"destination\"\
+            需要翻译为英语,\"total_time\",\"budget\"的type为int，不需要带单位。除此之外不得输出任何内容。其他要求如下\n\
+            {\n     \"start_time\":<用户旅行的开始时间，若用户没有提及则默认为{{#1750762998126.text#}}中的时间，格式为\"\
+            xxxx-xx-xx\">\n     \"end_time\":<用户旅行的结束时间，格式为\"xxxx-xx-xx\"，若找不到默认为无>\n\
+            \     \"total_time\":<用户旅行的持续时间，以天为单位，若找不到默认为0>\n     \"budget\":<用户的预算,若用户没有提及则默认为5000元>\n\
+            \      \"start_site\"<用户现在所在的位置，若用户没有提及默认为无>\n     \"destination\":<用户的目的地，同时参考{{#sys.query#}}和{{#1750988214364.text#}},必须翻译为英语，若找不到默认为no,no必须为小写>\n\
+            \     \"specific_plan\":<用户提出的特殊要求，如果用户未提出则默认为无>\n}"
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 1000
+        selected: false
+        title: LLM 2
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 155
+      id: '1750761477762'
+      parentId: '1750749528594'
+      position:
+        x: 149.95203096498102
+        y: 174.9530754817174
+      positionAbsolute:
+        x: 181.53891986782463
+        y: 182.27614748655918
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+      zIndex: 1002
+    - data:
+        answer: 请提供您的旅行目的地。
+        desc: ''
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1750749528594'
+        selected: false
+        title: 直接回复 5
+        type: answer
+        variables: []
+      height: 101
+      id: '1750762498203'
+      parentId: '1750749528594'
+      position:
+        x: 759.8628996908126
+        y: 338
+      positionAbsolute:
+        x: 791.4497885936562
+        y: 345.3230720048418
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+      zIndex: 1002
+    - data:
+        desc: ''
+        is_team_authorization: true
+        output_schema: null
+        paramSchemas:
+        - auto_generate: null
+          default: '%Y-%m-%d %H:%M:%S'
+          form: form
+          human_description:
+            en_US: Time format in strftime standard.
+            ja_JP: Time format in strftime standard.
+            pt_BR: Time format in strftime standard.
+            zh_Hans: strftime 标准的时间格式。
+          label:
+            en_US: Format
+            ja_JP: Format
+            pt_BR: Format
+            zh_Hans: 格式
+          llm_description: null
+          max: null
+          min: null
+          name: format
+          options: []
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: string
+        - auto_generate: null
+          default: UTC
+          form: form
+          human_description:
+            en_US: Timezone
+            ja_JP: Timezone
+            pt_BR: Timezone
+            zh_Hans: 时区
+          label:
+            en_US: Timezone
+            ja_JP: Timezone
+            pt_BR: Timezone
+            zh_Hans: 时区
+          llm_description: null
+          max: null
+          min: null
+          name: timezone
+          options:
+          - label:
+              en_US: UTC
+              ja_JP: UTC
+              pt_BR: UTC
+              zh_Hans: UTC
+            value: UTC
+          - label:
+              en_US: America/New_York
+              ja_JP: America/New_York
+              pt_BR: America/New_York
+              zh_Hans: 美洲/纽约
+            value: America/New_York
+          - label:
+              en_US: America/Los_Angeles
+              ja_JP: America/Los_Angeles
+              pt_BR: America/Los_Angeles
+              zh_Hans: 美洲/洛杉矶
+            value: America/Los_Angeles
+          - label:
+              en_US: America/Chicago
+              ja_JP: America/Chicago
+              pt_BR: America/Chicago
+              zh_Hans: 美洲/芝加哥
+            value: America/Chicago
+          - label:
+              en_US: America/Sao_Paulo
+              ja_JP: America/Sao_Paulo
+              pt_BR: América/São Paulo
+              zh_Hans: 美洲/圣保罗
+            value: America/Sao_Paulo
+          - label:
+              en_US: Asia/Shanghai
+              ja_JP: Asia/Shanghai
+              pt_BR: Asia/Shanghai
+              zh_Hans: 亚洲/上海
+            value: Asia/Shanghai
+          - label:
+              en_US: Asia/Ho_Chi_Minh
+              ja_JP: Asia/Ho_Chi_Minh
+              pt_BR: Ásia/Ho Chi Minh
+              zh_Hans: 亚洲/胡志明市
+            value: Asia/Ho_Chi_Minh
+          - label:
+              en_US: Asia/Tokyo
+              ja_JP: Asia/Tokyo
+              pt_BR: Asia/Tokyo
+              zh_Hans: 亚洲/东京
+            value: Asia/Tokyo
+          - label:
+              en_US: Asia/Dubai
+              ja_JP: Asia/Dubai
+              pt_BR: Asia/Dubai
+              zh_Hans: 亚洲/迪拜
+            value: Asia/Dubai
+          - label:
+              en_US: Asia/Kolkata
+              ja_JP: Asia/Kolkata
+              pt_BR: Asia/Kolkata
+              zh_Hans: 亚洲/加尔各答
+            value: Asia/Kolkata
+          - label:
+              en_US: Asia/Seoul
+              ja_JP: Asia/Seoul
+              pt_BR: Asia/Seoul
+              zh_Hans: 亚洲/首尔
+            value: Asia/Seoul
+          - label:
+              en_US: Asia/Singapore
+              ja_JP: Asia/Singapore
+              pt_BR: Asia/Singapore
+              zh_Hans: 亚洲/新加坡
+            value: Asia/Singapore
+          - label:
+              en_US: Europe/London
+              ja_JP: Europe/London
+              pt_BR: Europe/London
+              zh_Hans: 欧洲/伦敦
+            value: Europe/London
+          - label:
+              en_US: Europe/Berlin
+              ja_JP: Europe/Berlin
+              pt_BR: Europe/Berlin
+              zh_Hans: 欧洲/柏林
+            value: Europe/Berlin
+          - label:
+              en_US: Europe/Moscow
+              ja_JP: Europe/Moscow
+              pt_BR: Europe/Moscow
+              zh_Hans: 欧洲/莫斯科
+            value: Europe/Moscow
+          - label:
+              en_US: Australia/Sydney
+              ja_JP: Australia/Sydney
+              pt_BR: Australia/Sydney
+              zh_Hans: 澳大利亚/悉尼
+            value: Australia/Sydney
+          - label:
+              en_US: Pacific/Auckland
+              ja_JP: Pacific/Auckland
+              pt_BR: Pacific/Auckland
+              zh_Hans: 太平洋/奥克兰
+            value: Pacific/Auckland
+          - label:
+              en_US: Africa/Cairo
+              ja_JP: Africa/Cairo
+              pt_BR: Africa/Cairo
+              zh_Hans: 非洲/开罗
+            value: Africa/Cairo
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: select
+        params:
+          format: ''
+          timezone: ''
+        provider_id: time
+        provider_name: time
+        provider_type: builtin
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 1000
+        selected: false
+        title: 获取当前时间
+        tool_configurations:
+          format: '%Y-%m-%d %H:%M:%S'
+          timezone: UTC
+        tool_description: 一个用于获取当前时间的工具。
+        tool_label: 获取当前时间
+        tool_name: current_time
+        tool_parameters: {}
+        type: tool
+      height: 145
+      id: '1750762998126'
+      position:
+        x: -433.08271524261414
+        y: -296.46799820912184
+      positionAbsolute:
+        x: -433.08271524261414
+        y: -296.46799820912184
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        answer: API调用错误，请重试。
+        desc: ''
+        selected: false
+        title: 直接回复 6
+        type: answer
+        variables: []
+      height: 101
+      id: '1750764982275'
+      position:
+        x: 1929.4706748372796
+        y: -487.7394771290415
+      positionAbsolute:
+        x: 1929.4706748372796
+        y: -487.7394771290415
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        answer: API调用出错，请重试。
+        desc: ''
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1750749528594'
+        selected: false
+        title: 直接回复 8
+        type: answer
+        variables: []
+      height: 101
+      id: '1750765130092'
+      parentId: '1750749528594'
+      position:
+        x: 61.152349678683265
+        y: 350.5177977468155
+      positionAbsolute:
+        x: 92.73923858152688
+        y: 357.8408697516573
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+      zIndex: 1002
+    - data:
+        answer: API调用出错，请重试。
+        desc: ''
+        selected: false
+        title: 直接回复 9
+        type: answer
+        variables: []
+      height: 101
+      id: '1750765181990'
+      position:
+        x: 453.2376127531894
+        y: -291.0846725881264
+      positionAbsolute:
+        x: 453.2376127531894
+        y: -291.0846725881264
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        desc: ''
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: Qwen/Qwen2.5-VL-72B-Instruct
+          provider: langgenius/siliconflow/siliconflow
+        parameters:
+        - description: 第一句描述
+          name: first
+          required: false
+          type: string
+        - description: 第二句描述
+          name: second
+          required: false
+          type: string
+        - description: 第三句描述
+          name: third
+          required: false
+          type: string
+        - description: 第四句描述
+          name: fourth
+          required: false
+          type: string
+        query:
+        - '17508508619110'
+        - text
+        reasoning_mode: prompt
+        selected: false
+        title: 参数提取器 2 (1)
+        type: parameter-extractor
+        variables: []
+        vision:
+          enabled: false
+      height: 89
+      id: '17507720474250'
+      position:
+        x: 2322.2337609696588
+        y: -258.33133828160555
+      positionAbsolute:
+        x: 2322.2337609696588
+        y: -258.33133828160555
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        desc: ''
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: Qwen/Qwen2.5-VL-72B-Instruct
+          provider: langgenius/siliconflow/siliconflow
+        parameters:
+        - description: 图片信息
+          name: imgURL_2
+          required: false
+          type: string
+        query:
+        - '17509883117330'
+        - text
+        reasoning_mode: prompt
+        selected: false
+        title: 参数提取器 3(2)
+        type: parameter-extractor
+        variables: []
+        vision:
+          enabled: false
+      height: 89
+      id: '1750814820840'
+      position:
+        x: 3113.2488332285093
+        y: -422.13994928405754
+      positionAbsolute:
+        x: 3113.2488332285093
+        y: -422.13994928405754
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        desc: ''
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: Qwen/Qwen2.5-VL-72B-Instruct
+          provider: langgenius/siliconflow/siliconflow
+        parameters:
+        - description: 图片信息
+          name: imgURL_1
+          required: false
+          type: string
+        query:
+        - '1750988276885'
+        - text
+        reasoning_mode: prompt
+        selected: false
+        title: 参数提取器 3 (1)
+        type: parameter-extractor
+        variables: []
+        vision:
+          enabled: false
+      height: 89
+      id: '17508149124980'
+      position:
+        x: 3113.2488332285093
+        y: -571.5709263862389
+      positionAbsolute:
+        x: 3113.2488332285093
+        y: -571.5709263862389
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        desc: ''
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: Qwen/Qwen2.5-VL-72B-Instruct
+          provider: langgenius/siliconflow/siliconflow
+        parameters:
+        - description: 图片信息
+          name: imgURL_3
+          required: false
+          type: string
+        query:
+        - '17509883418240'
+        - text
+        reasoning_mode: prompt
+        selected: false
+        title: 参数提取器 3 (3)
+        type: parameter-extractor
+        variables: []
+        vision:
+          enabled: false
+      height: 89
+      id: '17508149131760'
+      position:
+        x: 3113.2488332285093
+        y: -291.0846725881264
+      positionAbsolute:
+        x: 3113.2488332285093
+        y: -291.0846725881264
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        code: "import json\n\ndef main(json_str: str) -> dict:\n    data = json.loads(json_str)\n\
+          \    return {'result': data.get('tt')}"
+        code_language: python3
+        desc: ''
+        outputs:
+          result:
+            children: null
+            type: string
+        selected: false
+        title: 代码执行 3
+        type: code
+        variables:
+        - value_selector:
+          - '1750852127493'
+          - text
+          variable: json_str
+      height: 53
+      id: '1750848766038'
+      position:
+        x: 2120.55469013552
+        y: -788.1027545544054
+      positionAbsolute:
+        x: 2120.55469013552
+        y: -788.1027545544054
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        answer: '{{#1750927347296.result#}}
+
+          参考图片
+
+          <img src=''{{#17508149124980.imgURL_1#}}''>
+
+          <img src=''{{#1750814820840.imgURL_2#}}''>
+
+          <img src =''{{#17508149131760.imgURL_3#}}''>
+
+          '
+        desc: ''
+        selected: false
+        title: 直接回复 8
+        type: answer
+        variables: []
+      height: 193
+      id: '1750849985155'
+      position:
+        x: 3689.6322065129502
+        y: -596.9196083340154
+      positionAbsolute:
+        x: 3689.6322065129502
+        y: -596.9196083340154
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: ''
+        model:
+          completion_params: {}
+          mode: chat
+          name: Qwen/Qwen2.5-72B-Instruct
+          provider: langgenius/siliconflow/siliconflow
+        prompt_template:
+        - id: e57d4976-ebe4-443c-a804-b42ca57eb7fc
+          role: system
+          text: "##角色：生图AI提示词专家\n###任务：根据给出旅游计划所参观会景点来生成的四句景点描述，不要太长，要突出在旅游计划的季节时所参观景点的特征，要适合AI生图软件生图，不要写古诗词，四句描述尽可能描述的是不同的景点。\n\
+            ##旅行计划：\n去{{#1750595109034.destination#}}旅游\n时间从{{#1750595109034.start_time#}}到{{#1750595109034.end_time#}}\n\
+            ##输出要求\n-输出格式请严格按照如下输出：\n{\n     \"first\":<你生成的第一句描述>\n     \"second\"\
+            :<你生成的第二句描述>\n     \"third\":<你生成的第三句描述>\n     \"fourth\":<你生成的第四句描述>\n\
+            }"
+        selected: false
+        structured_output:
+          schema:
+            additionalProperties: false
+            properties:
+              image_information:
+                description: 对于预览图的描述
+                type: string
+            required: []
+            type: object
+        structured_output_enabled: false
+        title: 生成图片描述 (2)
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 89
+      id: '17508508619110'
+      position:
+        x: 1878.0404325768993
+        y: -310.9408451567454
+      positionAbsolute:
+        x: 1878.0404325768993
+        y: -310.9408451567454
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        desc: ''
+        error_strategy: fail-branch
+        is_team_authorization: true
+        output_schema: null
+        paramSchemas:
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          label:
+            en_US: start_time
+            ja_JP: start_time
+            pt_BR: start_time
+            zh_Hans: start_time
+          llm_description: ''
+          max: null
+          min: null
+          name: start_time
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: string
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          label:
+            en_US: end_time
+            ja_JP: end_time
+            pt_BR: end_time
+            zh_Hans: end_time
+          llm_description: ''
+          max: null
+          min: null
+          name: end_time
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: string
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          label:
+            en_US: destination
+            ja_JP: destination
+            pt_BR: destination
+            zh_Hans: destination
+          llm_description: ''
+          max: null
+          min: null
+          name: destination
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: string
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          label:
+            en_US: total_time
+            ja_JP: total_time
+            pt_BR: total_time
+            zh_Hans: total_time
+          llm_description: ''
+          max: null
+          min: null
+          name: total_time
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: number
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          label:
+            en_US: budget
+            ja_JP: budget
+            pt_BR: budget
+            zh_Hans: budget
+          llm_description: ''
+          max: null
+          min: null
+          name: budget
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: number
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          label:
+            en_US: start_site
+            ja_JP: start_site
+            pt_BR: start_site
+            zh_Hans: start_site
+          llm_description: ''
+          max: null
+          min: null
+          name: start_site
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: string
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          label:
+            en_US: specific_plan
+            ja_JP: specific_plan
+            pt_BR: specific_plan
+            zh_Hans: specific_plan
+          llm_description: ''
+          max: null
+          min: null
+          name: specific_plan
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: string
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          label:
+            en_US: question
+            ja_JP: question
+            pt_BR: question
+            zh_Hans: question
+          llm_description: ''
+          max: null
+          min: null
+          name: question
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: string
+        params:
+          budget: ''
+          destination: ''
+          end_time: ''
+          question: ''
+          specific_plan: ''
+          start_site: ''
+          start_time: ''
+          total_time: ''
+        provider_id: 16cdf078-7421-4251-ad8f-1e35de5044c6
+        provider_name: 输出
+        provider_type: workflow
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 1000
+        selected: false
+        title: 输出
+        tool_configurations: {}
+        tool_description: ''
+        tool_label: 输出
+        tool_name: output
+        tool_parameters:
+          budget:
+            type: variable
+            value:
+            - '1750595109034'
+            - budget
+          destination:
+            type: mixed
+            value: '{{#1750595109034.destination#}}'
+          end_time:
+            type: mixed
+            value: '{{#1750595109034.end_time#}}'
+          question:
+            type: mixed
+            value: '{{#sys.query#}}'
+          specific_plan:
+            type: mixed
+            value: '{{#1750595109034.specific_plan#}}'
+          start_site:
+            type: mixed
+            value: '{{#1750595109034.start_site#}}'
+          start_time:
+            type: mixed
+            value: '{{#1750595109034.start_time#}}'
+          total_time:
+            type: variable
+            value:
+            - '1750595109034'
+            - total_time
+        type: tool
+      height: 119
+      id: '1750852127493'
+      position:
+        x: 1580.9869713925982
+        y: -600.8797379006165
+      positionAbsolute:
+        x: 1580.9869713925982
+        y: -600.8797379006165
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        code: "\ndef main(s: str) -> dict:\n    x=s.find(\"\\\"result\\\":\")\n  \
+          \  n=len(s)\n    s=s[x+11:n-3]\n    s=s.replace('\\\\n','\\n')\n    s=s.replace('**','')\n\
+          \    return {\n        \"result\": s,\n    }\n"
+        code_language: python3
+        desc: ''
+        outputs:
+          result:
+            children: null
+            type: string
+        selected: false
+        title: 代码执行 4
+        type: code
+        variables:
+        - value_selector:
+          - '1750848766038'
+          - result
+          variable: s
+      height: 53
+      id: '1750927347296'
+      position:
+        x: 2633.0129422256186
+        y: -796.8082601873666
+      positionAbsolute:
+        x: 2633.0129422256186
+        y: -796.8082601873666
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        desc: ''
+        error_strategy: fail-branch
+        is_team_authorization: true
+        output_schema: null
+        paramSchemas:
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          label:
+            en_US: pic_list
+            ja_JP: pic_list
+            pt_BR: pic_list
+            zh_Hans: pic_list
+          llm_description: ''
+          max: null
+          min: null
+          name: pic_list
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: files
+        params:
+          pic_list: ''
+        provider_id: 651c1887-ec07-44b0-b709-d5585ba1906a
+        provider_name: 图片预处理
+        provider_type: workflow
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 1000
+        selected: false
+        title: 图片预处理
+        tool_configurations: {}
+        tool_description: ''
+        tool_label: 图片预处理
+        tool_name: picture_deal
+        tool_parameters:
+          pic_list:
+            type: variable
+            value:
+            - sys
+            - files
+        type: tool
+      height: 119
+      id: '1750988214364'
+      position:
+        x: 80.06088436151049
+        y: -339.2766487930014
+      positionAbsolute:
+        x: 80.06088436151049
+        y: -339.2766487930014
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        desc: ''
+        is_team_authorization: true
+        output_schema: null
+        paramSchemas:
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          label:
+            en_US: 图片描述信息
+            ja_JP: 图片描述信息
+            pt_BR: 图片描述信息
+            zh_Hans: 图片描述信息
+          llm_description: ''
+          max: null
+          min: null
+          name: img
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: string
+        params:
+          img: ''
+        provider_id: 6562859a-c31a-4847-8672-9df6a7a6b838
+        provider_name: 图像生成
+        provider_type: workflow
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 1000
+        selected: false
+        title: 图像生成
+        tool_configurations: {}
+        tool_description: ''
+        tool_label: 图像生成
+        tool_name: picture_generation
+        tool_parameters:
+          img:
+            type: mixed
+            value: '{{#17507720474250.first#}}'
+        type: tool
+      height: 83
+      id: '1750988276885'
+      position:
+        x: 2779.000460124346
+        y: -582.4459229818577
+      positionAbsolute:
+        x: 2779.000460124346
+        y: -582.4459229818577
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        desc: ''
+        is_team_authorization: true
+        output_schema: null
+        paramSchemas:
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          label:
+            en_US: 图片描述信息
+            ja_JP: 图片描述信息
+            pt_BR: 图片描述信息
+            zh_Hans: 图片描述信息
+          llm_description: ''
+          max: null
+          min: null
+          name: img
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: string
+        params:
+          img: ''
+        provider_id: 6562859a-c31a-4847-8672-9df6a7a6b838
+        provider_name: 图像生成
+        provider_type: workflow
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 1000
+        selected: false
+        title: 图像生成 (1)
+        tool_configurations: {}
+        tool_description: ''
+        tool_label: 图像生成
+        tool_name: picture_generation
+        tool_parameters:
+          img:
+            type: mixed
+            value: '{{#17507720474250.second#}}'
+        type: tool
+      height: 83
+      id: '17509883117330'
+      position:
+        x: 2758.238843442135
+        y: -430.70251324297504
+      positionAbsolute:
+        x: 2758.238843442135
+        y: -430.70251324297504
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        desc: ''
+        is_team_authorization: true
+        output_schema: null
+        paramSchemas:
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          label:
+            en_US: 图片描述信息
+            ja_JP: 图片描述信息
+            pt_BR: 图片描述信息
+            zh_Hans: 图片描述信息
+          llm_description: ''
+          max: null
+          min: null
+          name: img
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: string
+        params:
+          img: ''
+        provider_id: 6562859a-c31a-4847-8672-9df6a7a6b838
+        provider_name: 图像生成
+        provider_type: workflow
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 1000
+        selected: false
+        title: 图像生成 (2)
+        tool_configurations: {}
+        tool_description: ''
+        tool_label: 图像生成
+        tool_name: picture_generation
+        tool_parameters:
+          img:
+            type: mixed
+            value: '{{#17507720474250.third#}}'
+        type: tool
+      height: 83
+      id: '17509883418240'
+      position:
+        x: 2728.859159514976
+        y: -284.2371351471839
+      positionAbsolute:
+        x: 2728.859159514976
+        y: -284.2371351471839
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    viewport:
+      x: -2367.177040428134
+      y: 767.2471452792564
+      zoom: 0.7578582832551999

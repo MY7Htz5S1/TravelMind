@@ -1095,7 +1095,7 @@ class Ui_MainWindow(object):
         icon3.addFile(u":/icons/images/icons/icon_maximize.png", QSize(), QIcon.Normal, QIcon.Off)
         self.maximizeRestoreAppBtn.setIcon(icon3)
         self.maximizeRestoreAppBtn.setIconSize(QSize(20, 20))
-
+        self.maximizeRestoreAppBtn.hide()
         self.horizontalLayout_2.addWidget(self.maximizeRestoreAppBtn)
 
         self.closeAppBtn = QPushButton(self.rightButtons)
@@ -1565,14 +1565,14 @@ class Ui_MainWindow(object):
         self.history_buttons_frame.setFrameShadow(QFrame.Raised)
         self.history_buttons_layout = QHBoxLayout(self.history_buttons_frame)
         self.history_buttons_layout.setObjectName(u"history_buttons_layout")
-        self.history_buttons_layout.setContentsMargins(0, 10, 0, 0)
+        self.history_buttons_layout.setContentsMargins(0, 0, 0, 0)
 
         # 加载对话按钮
         self.loadChatButton = QPushButton(self.history_buttons_frame)
         self.loadChatButton.setObjectName(u"loadChatButton")
         self.loadChatButton.setText("Load Chat")
-        self.loadChatButton.setMinimumSize(QSize(100, 35))
-        self.loadChatButton.setMaximumSize(QSize(120, 35))
+        self.loadChatButton.setMinimumSize(QSize(100, 15))
+        self.loadChatButton.setMaximumSize(QSize(120, 15))
         self.loadChatButton.setCursor(QCursor(Qt.PointingHandCursor))
         self.loadChatButton.setStyleSheet(u"""
             QPushButton {
@@ -1605,8 +1605,8 @@ class Ui_MainWindow(object):
         self.deleteChatButton = QPushButton(self.history_buttons_frame)
         self.deleteChatButton.setObjectName(u"deleteChatButton")
         self.deleteChatButton.setText("Delete")
-        self.deleteChatButton.setMinimumSize(QSize(80, 35))
-        self.deleteChatButton.setMaximumSize(QSize(100, 35))
+        self.deleteChatButton.setMinimumSize(QSize(80, 15))
+        self.deleteChatButton.setMaximumSize(QSize(100, 15))
         self.deleteChatButton.setCursor(QCursor(Qt.PointingHandCursor))
         self.deleteChatButton.setStyleSheet(u"""
             QPushButton {
