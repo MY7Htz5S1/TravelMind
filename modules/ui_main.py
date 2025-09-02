@@ -760,7 +760,7 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_8.addWidget(self.btn_home)
 
-        # 添加AI聊天按钮
+    # Add AI chat button
         self.btn_ai_chat = QPushButton(self.topMenu)
         self.btn_ai_chat.setObjectName(u"btn_ai_chat")
         sizePolicy.setHeightForWidth(self.btn_ai_chat.sizePolicy().hasHeightForWidth())
@@ -773,7 +773,7 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_8.addWidget(self.btn_ai_chat)
 
-        # 添加历史对话按钮
+    # Add history button
         self.btn_history = QPushButton(self.topMenu)
         self.btn_history.setObjectName(u"btn_history")
         sizePolicy.setHeightForWidth(self.btn_history.sizePolicy().hasHeightForWidth())
@@ -1141,7 +1141,7 @@ class Ui_MainWindow(object):
         self.stackedWidget.setObjectName(u"stackedWidget")
         self.stackedWidget.setStyleSheet(u"background: transparent;")
 
-        # 主页
+    # Home page
         # self.home = QWidget()
         # self.home.setObjectName(u"home")
         # self.home.setStyleSheet(u"background-image: url(:/images/images/images/PyDracula_vertical.png);\n"
@@ -1151,28 +1151,28 @@ class Ui_MainWindow(object):
 
         self.home = QWidget()
         self.home.setObjectName(u"home")
-        # 移除背景图片，使用纯色背景
+    # Remove background image, use solid background
         self.home.setStyleSheet(u"""
             QWidget#home {
                 background-color: rgb(40, 44, 52);
             }
         """)
 
-        # 创建主页的布局 - 确保有足够空间
+        # Create layout for home page - ensure sufficient space
         self.home_layout = QVBoxLayout(self.home)
-        self.home_layout.setSpacing(25)  # 适中的间距
+        self.home_layout.setSpacing(25)  # Moderate spacing
         self.home_layout.setObjectName(u"home_layout")
-        self.home_layout.setContentsMargins(30, 30, 30, 30)  # 适当边距
+        self.home_layout.setContentsMargins(30, 30, 30, 30)  # Appropriate margins
 
-        # 添加弹簧到顶部
+        # Add spacer to top
         self.home_top_spacer = QSpacerItem(20, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.home_layout.addItem(self.home_top_spacer)
 
-        # 欢迎标题 - 修复行高问题
+        # Welcome title - fix line-height issues
         self.welcome_title = QLabel(self.home)
         self.welcome_title.setObjectName(u"welcome_title")
         self.welcome_title.setAlignment(Qt.AlignCenter)
-        self.welcome_title.setMinimumHeight(80)  # 确保足够高度
+        self.welcome_title.setMinimumHeight(80)  # Ensure sufficient height
         self.welcome_title.setStyleSheet(u"""
             QLabel {
                 color: rgb(189, 147, 249);
@@ -1186,11 +1186,11 @@ class Ui_MainWindow(object):
 
         self.home_layout.addWidget(self.welcome_title)
 
-        # 副标题 - 修复行高问题
+        # Subtitle - fix line-height issues
         self.welcome_subtitle = QLabel(self.home)
         self.welcome_subtitle.setObjectName(u"welcome_subtitle")
         self.welcome_subtitle.setAlignment(Qt.AlignCenter)
-        self.welcome_subtitle.setMinimumHeight(50)  # 确保足够高度
+        self.welcome_subtitle.setMinimumHeight(50)  # Ensure sufficient height
         self.welcome_subtitle.setStyleSheet(u"""
             QLabel {
                 color: rgb(221, 221, 221);
@@ -1204,12 +1204,12 @@ class Ui_MainWindow(object):
 
         self.home_layout.addWidget(self.welcome_subtitle)
 
-        # 功能介绍 - 修复行高和确保完整显示
+        # Features description - fix line-height and ensure full display
         self.features_text = QLabel(self.home)
         self.features_text.setObjectName(u"features_text")
         self.features_text.setAlignment(Qt.AlignCenter)
         self.features_text.setWordWrap(True)
-        self.features_text.setMinimumHeight(200)  # 确保足够高度显示所有文字
+        self.features_text.setMinimumHeight(200)  # Ensure enough height to display all text
         self.features_text.setStyleSheet(u"""
             QLabel {
                 color: rgb(189, 189, 189);
@@ -1219,7 +1219,7 @@ class Ui_MainWindow(object):
                 padding: 15px;
             }
         """)
-        # 使用HTML格式来更好地控制行间距
+        # Use HTML formatting to better control line spacing
         self.features_text.setText(
             "<div style='line-height: 1.8;'>"
             "✈️ Plan your perfect trip<br><br>"
@@ -1232,11 +1232,11 @@ class Ui_MainWindow(object):
 
         self.home_layout.addWidget(self.features_text)
 
-        # 开始对话按钮 - 合适尺寸和CSS样式
+        # Start chat button - proper size and CSS styles
         self.start_chat_button = QPushButton(self.home)
         self.start_chat_button.setObjectName(u"start_chat_button")
         self.start_chat_button.setText("Start Conversation")
-        self.start_chat_button.setMinimumSize(QSize(280, 60))  # 适中的按钮大小
+        self.start_chat_button.setMinimumSize(QSize(280, 60))  # Moderate button size
         self.start_chat_button.setMaximumSize(QSize(320, 60))
         self.start_chat_button.setCursor(QCursor(Qt.PointingHandCursor))
         self.start_chat_button.setStyleSheet(u"""
@@ -1258,7 +1258,7 @@ class Ui_MainWindow(object):
             }
         """)
 
-        # 创建水平布局来居中按钮
+    # Create horizontal layout to center the button
         self.button_layout = QHBoxLayout()
         self.button_layout.addItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
         self.button_layout.addWidget(self.start_chat_button)
@@ -1266,13 +1266,13 @@ class Ui_MainWindow(object):
 
         self.home_layout.addLayout(self.button_layout)
 
-        # 添加弹簧到底部
+    # Add spacer to bottom
         self.home_bottom_spacer = QSpacerItem(20, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.home_layout.addItem(self.home_bottom_spacer)
 
         self.stackedWidget.addWidget(self.home)
 
-        # 添加AI聊天页面
+    # Add AI chat page
         self.ai_chat = QWidget()
         self.ai_chat.setObjectName(u"ai_chat")
         self.ai_chat_layout = QVBoxLayout(self.ai_chat)
@@ -1280,7 +1280,7 @@ class Ui_MainWindow(object):
         self.ai_chat_layout.setObjectName(u"ai_chat_layout")
         self.ai_chat_layout.setContentsMargins(20, 20, 20, 20)
 
-        # 聊天标题和控制区域
+    # Chat title and control area
         self.chat_header = QFrame(self.ai_chat)
         self.chat_header.setObjectName(u"chat_header")
         self.chat_header.setMaximumSize(QSize(16777215, 60))
@@ -1290,7 +1290,7 @@ class Ui_MainWindow(object):
         self.chat_header_layout.setObjectName(u"chat_header_layout")
         self.chat_header_layout.setContentsMargins(0, 0, 0, 10)
 
-        # 标题
+    # Title
         self.chat_title = QLabel(self.chat_header)
         self.chat_title.setObjectName(u"chat_title")
         font_title = QFont()
@@ -1303,11 +1303,11 @@ class Ui_MainWindow(object):
 
         self.chat_header_layout.addWidget(self.chat_title)
 
-        # 弹簧
+    # Spacer
         self.chat_header_spacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.chat_header_layout.addItem(self.chat_header_spacer)
 
-        # 清除聊天按钮
+    # Clear chat button
         self.clearChatButton = QPushButton(self.chat_header)
         self.clearChatButton.setObjectName(u"clearChatButton")
         self.clearChatButton.setText("New Chat")
@@ -1337,7 +1337,7 @@ class Ui_MainWindow(object):
 
         self.ai_chat_layout.addWidget(self.chat_header)
 
-        # 聊天显示区域
+    # Chat display area
         self.chatDisplayArea = QScrollArea(self.ai_chat)
         self.chatDisplayArea.setObjectName(u"chatDisplayArea")
         self.chatDisplayArea.setWidgetResizable(True)
@@ -1345,7 +1345,7 @@ class Ui_MainWindow(object):
         self.chatDisplayArea.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.chatDisplayArea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
-        # 聊天内容容器
+    # Chat content container
         self.chatContentWidget = QWidget()
         self.chatContentWidget.setObjectName(u"chatContentWidget")
         self.chatContentLayout = QVBoxLayout(self.chatContentWidget)
@@ -1353,7 +1353,7 @@ class Ui_MainWindow(object):
         self.chatContentLayout.setContentsMargins(10, 10, 10, 10)
         self.chatContentLayout.setSpacing(10)
 
-        # 欢迎消息
+    # Welcome message
         self.welcome_message = QLabel(self.chatContentWidget)
         self.welcome_message.setObjectName(u"welcome_message")
         self.welcome_message.setAlignment(Qt.AlignCenter)
@@ -1375,14 +1375,14 @@ class Ui_MainWindow(object):
 
         self.chatContentLayout.addWidget(self.welcome_message)
 
-        # 添加弹簧到底部
+    # Add spacer to bottom
         self.chat_spacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.chatContentLayout.addItem(self.chat_spacer)
 
         self.chatDisplayArea.setWidget(self.chatContentWidget)
         self.ai_chat_layout.addWidget(self.chatDisplayArea)
 
-        # 输入区域
+    # Input area
         self.chat_input_frame = QFrame(self.ai_chat)
         self.chat_input_frame.setObjectName(u"chat_input_frame")
         self.chat_input_frame.setMaximumSize(QSize(16777215, 120))
@@ -1392,12 +1392,12 @@ class Ui_MainWindow(object):
         self.chat_input_layout.setObjectName(u"chat_input_layout")
         self.chat_input_layout.setContentsMargins(0, 10, 0, 0)
 
-        # 输入框和发送按钮的水平布局
+    # Horizontal layout for input box and send button
         self.input_horizontal_layout = QHBoxLayout()
         self.input_horizontal_layout.setObjectName(u"input_horizontal_layout")
         self.input_horizontal_layout.setSpacing(10)
 
-        # 多行输入框
+    # Multi-line input box
         self.chatInputArea = QTextEdit(self.chat_input_frame)
         self.chatInputArea.setObjectName(u"chatInputArea")
         self.chatInputArea.setMaximumSize(QSize(16777215, 80))
@@ -1408,7 +1408,7 @@ class Ui_MainWindow(object):
 
         self.input_horizontal_layout.addWidget(self.chatInputArea)
 
-        # 发送按钮
+    # Send button
         self.sendButton = QPushButton(self.chat_input_frame)
         self.sendButton.setObjectName(u"sendButton")
         self.sendButton.setText("Send")
@@ -1444,12 +1444,12 @@ class Ui_MainWindow(object):
 
         self.chat_input_layout.addLayout(self.input_horizontal_layout)
 
-        # 快捷建议按钮
+    # Quick suggestion buttons
         self.suggestions_layout = QHBoxLayout()
         self.suggestions_layout.setObjectName(u"suggestions_layout")
         self.suggestions_layout.setSpacing(10)
 
-        # 建议按钮
+    # Suggestion buttons
         suggestions = ["Shanghai 3-day tour", "Xiamen food guide", "Beijing family trip", "Chengdu weekend tour"]
         self.suggestion_buttons = []
 
@@ -1478,7 +1478,7 @@ class Ui_MainWindow(object):
             self.suggestion_buttons.append(btn)
             self.suggestions_layout.addWidget(btn)
 
-        # 添加弹簧
+    # Add spacer
         self.suggestions_spacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.suggestions_layout.addItem(self.suggestions_spacer)
 
@@ -1488,7 +1488,7 @@ class Ui_MainWindow(object):
 
         self.stackedWidget.addWidget(self.ai_chat)
 
-        # 添加历史对话页面
+    # Add history page
         self.history = QWidget()
         self.history.setObjectName(u"history")
         self.history_layout = QVBoxLayout(self.history)
@@ -1496,7 +1496,7 @@ class Ui_MainWindow(object):
         self.history_layout.setObjectName(u"history_layout")
         self.history_layout.setContentsMargins(20, 20, 20, 20)
 
-        # 历史对话标题和控制区域
+    # History title and control area
         self.history_header = QFrame(self.history)
         self.history_header.setObjectName(u"history_header")
         self.history_header.setMaximumSize(QSize(16777215, 60))
@@ -1506,7 +1506,7 @@ class Ui_MainWindow(object):
         self.history_header_layout.setObjectName(u"history_header_layout")
         self.history_header_layout.setContentsMargins(0, 0, 0, 10)
 
-        # 标题
+    # Title
         self.history_title = QLabel(self.history_header)
         self.history_title.setObjectName(u"history_title")
         self.history_title.setFont(font_title)
@@ -1515,11 +1515,11 @@ class Ui_MainWindow(object):
 
         self.history_header_layout.addWidget(self.history_title)
 
-        # 弹簧
+    # Spacer
         self.history_header_spacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.history_header_layout.addItem(self.history_header_spacer)
 
-        # 清除历史按钮
+    # Clear history button
         self.clearHistoryButton = QPushButton(self.history_header)
         self.clearHistoryButton.setObjectName(u"clearHistoryButton")
         self.clearHistoryButton.setText("Clear All")
@@ -1548,7 +1548,7 @@ class Ui_MainWindow(object):
 
         self.history_layout.addWidget(self.history_header)
 
-        # 历史对话列表
+    # History list
         self.historyList = QListWidget(self.history)
         self.historyList.setObjectName(u"historyList")
         self.historyList.setFrameShape(QFrame.NoFrame)
@@ -1557,7 +1557,7 @@ class Ui_MainWindow(object):
 
         self.history_layout.addWidget(self.historyList)
 
-        # 操作按钮区域
+    # Action buttons area
         self.history_buttons_frame = QFrame(self.history)
         self.history_buttons_frame.setObjectName(u"history_buttons_frame")
         self.history_buttons_frame.setMaximumSize(QSize(16777215, 50))
@@ -1567,7 +1567,7 @@ class Ui_MainWindow(object):
         self.history_buttons_layout.setObjectName(u"history_buttons_layout")
         self.history_buttons_layout.setContentsMargins(0, 0, 0, 0)
 
-        # 加载对话按钮
+    # Load chat button
         self.loadChatButton = QPushButton(self.history_buttons_frame)
         self.loadChatButton.setObjectName(u"loadChatButton")
         self.loadChatButton.setText("Load Chat")
@@ -1597,11 +1597,11 @@ class Ui_MainWindow(object):
 
         self.history_buttons_layout.addWidget(self.loadChatButton)
 
-        # 弹簧
+    # Spacer
         self.history_buttons_spacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.history_buttons_layout.addItem(self.history_buttons_spacer)
 
-        # 删除对话按钮
+    # Delete chat button
         self.deleteChatButton = QPushButton(self.history_buttons_frame)
         self.deleteChatButton.setObjectName(u"deleteChatButton")
         self.deleteChatButton.setText("Delete")
@@ -1635,7 +1635,7 @@ class Ui_MainWindow(object):
 
         self.stackedWidget.addWidget(self.history)
 
-        # Widgets页面
+    # Widgets page
         self.widgets = QWidget()
         self.widgets.setObjectName(u"widgets")
         self.widgets.setStyleSheet(u"b")
@@ -2151,7 +2151,7 @@ class Ui_MainWindow(object):
                                                          "style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:9pt; color:#ffffff;\">pyside6-rcc resources.qrc -o resources_rc.py</span></p></body></html>",
                                                          None))
         self.titleRightInfo.setText(
-            QCoreApplication.translate("MainWindow", u"TravelMind - AI智能旅行助手",
+            QCoreApplication.translate("MainWindow", u"TravelMind",
                                        None))
         # if QT_CONFIG(tooltip)
         # self.settingsTopBtn.setToolTip(QCoreApplication.translate("MainWindow", u"Settings", None))

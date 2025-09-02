@@ -12,8 +12,9 @@ from os.path import abspath
 import requests
 import json
 from sseclient import SSEClient
+import subprocess
 
-# 语音和图片处理相关导入
+# Imports for voice and image processing
 import base64
 import tempfile
 import speech_recognition as sr
@@ -26,9 +27,9 @@ from modules import *
 from widgets import *
 from PySide6.QtCore import QThread, Signal
 
-os.environ["QT_FONT_DPI"] = "96"  # FIX Problem for High DPI and Scale above 100%
+os.environ["QT_FONT_DPI"] = "96"  # Fix problem for High DPI and scale above 100%
 
-# SET AS GLOBAL WIDGETS
+# Set as global widgets
 # ///////////////////////////////////////////////////////////////
 widgets = None
 
@@ -94,10 +95,10 @@ class StreamingChatMessage(QFrame):
         color: rgb(221, 221, 221);
         border-radius: 12px;
         padding: 12px 16px;
-        font-size: 24px;                                                    /* 字体大小 */
-        font-family: "Microsoft YaHei UI", "PingFang SC", system-ui;       /* 字体类型 */
-        font-weight: normal;                                                /* 字体粗细 */
-        line-height: 1.5;                                                  /* 行高 */
+        font-size: 24px;                                                    /* Font size */
+        font-family: "Microsoft YaHei UI", "PingFang SC", system-ui;       /* Font type */
+        font-weight: normal;                                                /* Font weight */
+        line-height: 1.5;                                                  /* Line height */
         margin-left: 10px;
     }
             """)
@@ -126,10 +127,10 @@ class StreamingChatMessage(QFrame):
                     color: rgb(221, 221, 221);
                     border-radius: 12px;
                     padding: 10px 15px;
-                    font-size: 24px;                    /* 字体大小：14px -> 16px */
-                    font-family: "Microsoft YaHei UI";  /* 字体：微软雅黑 */
-                    font-weight: normal;                /* 字体粗细 */
-                    line-height: 1.4;                  /* 行高：让文字更易读 */
+                    font-size: 24px;                    /* Font size: 14px -> 16px */
+                    font-family: "Microsoft YaHei UI";  /* Font: Microsoft YaHei */
+                    font-weight: normal;                /* Font weight */
+                    line-height: 1.4;                  /* Line height for better readability */
                     margin-left: 10px;
                 }
             """)
@@ -144,11 +145,11 @@ class StreamingChatMessage(QFrame):
         self.message_label.setText(text)
 
     def appendText(self, text):
-        """追加文本到消息（用于流式显示）"""
+        """Append text to the message (used for streaming display)"""
         self.current_text += text
         self.message_label.setText(self.current_text)
         
-        # 确保文本显示完整
+    # Ensure the text is fully displayed
         self.message_label.adjustSize()
         self.adjustSize()
         
@@ -223,19 +224,19 @@ class TypingIndicator(QFrame):
 
 
 class DifyAPIClient:
-    """增强版 Dify API客户端 - 支持图片上传"""
+    """Enhanced Dify API client - with file/image upload support"""
 
     def __init__(self, api_key, base_url="https://api.dify.ai/v1", user="default_user"):
         self.api_key = api_key
         self.base_url = base_url
-        self.user = user  # 添加默认用户标识
+        self.user = user  # Add default user identifier
         self.headers = {
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json"
         }
 
     def upload_file(self, file_path, user=None):
-        """上传文件并返回文件ID"""
+        """Upload a file and return its file ID"""
         if user is None:
             user = self.user
             
@@ -255,21 +256,21 @@ class DifyAPIClient:
                     data=data
                 )
                 
-                if response.status_code == 201:  # 注意状态码改为201
+                if response.status_code == 201:  # Note: status code 201 for created
                     file_data = response.json()
-                    return file_data.get('id')  # 返回文件ID
+                    return file_data.get('id')  # Return file ID
                 else:
-                    error_msg = f"文件上传失败 ({response.status_code}): {response.text[:100]}"
+                    error_msg = f"File upload failed ({response.status_code}): {response.text[:100]}"
                     print(error_msg)
                     return None
                 
         except Exception as e:
-            print(f"文件上传错误: {e}")
+            print(f"File upload error: {e}")
             return None
         
 
     def get_mime_type(self, filename):
-        """根据文件名获取MIME类型"""
+        """Get MIME type based on filename"""
         mime_types = {
             '.jpg': 'image/jpeg',
             '.jpeg': 'image/jpeg',
@@ -288,7 +289,7 @@ class DifyAPIClient:
     def chat_with_files(self, message, file_paths=None, conversation_id=None, user_id="travelmind_user"):
         url = f"{self.base_url}/chat-messages"
     
-        # 构建文件信息列表
+    # Build file info list
         piclist = []
         if file_paths:
             for file_path in file_paths:
@@ -301,9 +302,9 @@ class DifyAPIClient:
                             "upload_file_id": file_id
                         })
         
-        # 构建请求数据
+        # Build request payload
         data = {
-            "inputs": {},  # 使用test.py的格式
+            "inputs": {},  # Use format compatible with test.py
             "user": user_id,
             "query": message,
             "response_mode": "streaming",
@@ -320,12 +321,12 @@ class DifyAPIClient:
                 timeout=30
             )
         
-            # 检查响应状态
+            # Check response status
             if response.status_code not in (200,201):
-                error_msg = f"API返回错误 ({response.status_code}): "
+                error_msg = f"API returned error ({response.status_code}): "
                 try:
                     error_data = response.json()
-                    error_msg += error_data.get("message", "未知错误")
+                    error_msg += error_data.get("message", "unknown error")
                     if "detail" in error_data:
                         error_msg += f" - {error_data['detail']}"
                 except:
@@ -334,49 +335,44 @@ class DifyAPIClient:
             
             return response
         except requests.exceptions.RequestException as e:
-            raise Exception(f"API请求失败: {str(e)}")
+            raise Exception(f"API request failed: {str(e)}")
             
     def is_image(self, file_path):
-        """更精确的图片类型检查"""
+        """More accurate image type check"""
         image_exts = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']
         ext = os.path.splitext(file_path)[1].lower()
         return ext in image_exts
     
     
     def extract_image_urls(self,response_text):
-        """提取图片URL（特别处理标签）"""
-        # 第一种模式：直接匹配标签中的src属性
+        """Extract image URLs (handles HTML tags specially)"""
+    # First pattern: match src attributes within tags
         img_pattern = r']*src\s*=\s*[\'"]([^\'"]+)[\'"]'
     
-        # 第二种模式：匹配裸URL（备用）
+    # Second pattern: match raw URLs (fallback)
         url_pattern = r'(https?://[^\s"\'<]+)'
     
     
         found_urls = []
     
-        # 先尝试提取标签中的URL
+    # First try to extract URLs from tags
         img_matches = re.findall(img_pattern, response_text, re.IGNORECASE)
         for url in img_matches:
-            # 清理URL中的HTML实体和特殊字符
+            # Clean HTML entities and special characters from URL
             clean_url = url.replace('&amp;', '&').replace('&quot;', '"')
             found_urls.append(clean_url)
     
-        # 如果没找到标签，尝试普通URL匹配
+    # If no tag URLs found, try plain URL matching
         if not found_urls:
             url_matches = re.findall(url_pattern, response_text)
             for url in url_matches:
-                # 只保留图片URL
+                # Only keep image URLs
                 if any(url.lower().endswith(ext) for ext in ['.png', '.jpg', '.jpeg', '.gif', '.webp']):
                     found_urls.append(url)
     
         return found_urls
 
-
-    
-    
-
 class SimpleVoiceThread(QThread):
-    """简单的语音识别线程"""
     voice_result = Signal(str)
     voice_error = Signal(str)
 
@@ -384,25 +380,22 @@ class SimpleVoiceThread(QThread):
         super().__init__()
         self.is_recording = False
 
-        # 初始化语音识别
         self.recognizer = sr.Recognizer()
         self.microphone = sr.Microphone()
 
-        # 初始化Whisper
         try:
-            print("正在加载Whisper模型...")
+            print("Loading Whisper model...")
             self.whisper_model = whisper.load_model("base")
-            print("✅ Whisper模型加载完成")
+            print("✅ Whisper model loaded")
         except Exception as e:
-            print(f"❌ Whisper加载失败: {e}")
+            print(f"❌ Whisper Loading failed: {e}")
             self.whisper_model = None
 
-        # 调整环境噪音
         try:
             with self.microphone as source:
                 self.recognizer.adjust_for_ambient_noise(source, duration=1)
         except Exception as e:
-            print(f"麦克风初始化警告: {e}")
+            print(f"Microphone initialiazation warning: {e}")
 
     def start_recording(self):
         self.is_recording = True
@@ -413,7 +406,7 @@ class SimpleVoiceThread(QThread):
 
     def run(self):
         try:
-            print("🎤 开始录音...")
+            print("🎤 Start recording...")
 
             with self.microphone as source:
                 audio = self.recognizer.listen(source, timeout=10, phrase_time_limit=30)
@@ -421,16 +414,16 @@ class SimpleVoiceThread(QThread):
             if not self.is_recording:
                 return
 
-            print("🔄 正在识别语音...")
+            print("🔄 Working...")
             text = self.recognize_with_whisper(audio)
 
             if text and text.strip():
                 self.voice_result.emit(text.strip())
             else:
-                self.voice_error.emit("未识别到有效语音")
+                self.voice_error.emit("No valid speech recognized")
 
         except Exception as e:
-            self.voice_error.emit(f"语音识别失败: {str(e)}")
+            self.voice_error.emit(f"Voice recognition failed: {str(e)}")
 
     def recognize_with_whisper(self, audio):
         try:
@@ -447,20 +440,20 @@ class SimpleVoiceThread(QThread):
                 return self.recognizer.recognize_google(audio, language="zh-CN")
 
         except Exception as e:
-            print(f"Whisper识别错误: {e}")
+            print(f"Whisper failed: {e}")
             try:
                 return self.recognizer.recognize_google(audio, language="zh-CN")
             except:
-                raise Exception("所有识别方法都失败了")
+                raise Exception("Both Whisper and Google recognition failed")
 
 
 class APIConfig:
-    """API配置管理"""
+    """Manage API configuration loading and saving"""
     CONFIG_FILE = "api_config.json"
 
     @staticmethod
     def load_config():
-        """加载配置"""
+        """Loading configuration"""
         try:
             with open(APIConfig.CONFIG_FILE, 'r', encoding='utf-8') as f:
                 return json.load(f)
@@ -469,22 +462,20 @@ class APIConfig:
                 "dify_api_key": "",
                 "dify_base_url": "https://api.dify.ai/v1",
                 "stream_enabled": True,
-                "typing_speed": 0.03  # 默认打字速度
+                "typing_speed": 0.03  
             }
 
     @staticmethod
     def save_config(config):
-        """保存配置"""
         with open(APIConfig.CONFIG_FILE, 'w', encoding='utf-8') as f:
             json.dump(config, f, ensure_ascii=False, indent=2)
 
 
 class EnhancedAIResponseThread(QThread):
-    """支持图片的AI响应线程"""
     response_chunk = Signal(str)
     response_complete = Signal(str, str)
     error_occurred = Signal(str)
-    file_received = Signal(dict)  # 文件接收信号
+    file_received = Signal(dict)  
 
     def __init__(self, message, api_key=None, file_paths=None, conversation_id=None, stream=True, typing_speed=0.03):
         super().__init__()
@@ -493,9 +484,9 @@ class EnhancedAIResponseThread(QThread):
         self.file_paths = file_paths or []
         self.conversation_id = conversation_id
         self.stream = stream
-        self.typing_speed = typing_speed  # 添加打字速度属性
+        self.typing_speed = typing_speed
         self.is_cancelled = False
-        self.full_response = ""  # 存储完整的响应文本
+        self.full_response = "" 
 
         if not api_key:
             self.test_mode = True
@@ -516,9 +507,9 @@ class EnhancedAIResponseThread(QThread):
 
     def _handle_test_response(self):
         time.sleep(0.5)
-        response = f"这是测试回复。收到消息: {self.message}"
+        response = f"This is a test reply. Received message: {self.message}"
         if self.image_path:
-            response += "\n我看到您上传了一张图片，但测试模式无法分析图片内容。"
+            response += "\nI see you uploaded an image, but test mode cannot analyze image content."
 
         for char in response:
             if self.is_cancelled:
@@ -530,131 +521,131 @@ class EnhancedAIResponseThread(QThread):
             self.response_complete.emit("")
 
     def _handle_streaming_response(self):
-        """处理流式响应 - 逐块显示内容"""
+        """Handle streaming response - display content block by block"""
         try:
-            # 使用修改后的chat_with_files方法
+            # Use modified chat_with_files method
             response = self.client.chat_with_files(
                 self.message,
                 self.file_paths,
                 self.conversation_id,
-                user_id="travelmind_user"  # 使用test.py中的用户标识
+                user_id="travelmind_user"  # Use user identifier from test.py
             )
             
-            # 检查响应状态
+            # Check response status
             if response.status_code != 200:
-                error_msg = f"API返回错误 ({response.status_code}): "
+                error_msg = f"API returned error ({response.status_code}): "
                 try:
                     error_data = response.json()
-                    error_msg += error_data.get("message", "未知错误")
+                    error_msg += error_data.get("message", "unknown error")
                     if "detail" in error_data:
                         error_msg += f" - {error_data['detail']}"
                 except:
                     error_msg += response.text[:200] + "..."
                 raise Exception(error_msg)
             
-            # 手动处理SSE流
+            # Manually handle SSE stream
             buffer = ""
             new_conversation_id = self.conversation_id
             last_message_id = None
-            content_buffer = ""  # 用于累积当前消息的内容
+            content_buffer = ""  # Used to accumulate current message content
         
             for line in response.iter_lines():
                 if self.is_cancelled:
                     break
                 
                 if line:
-                    # 解码行
+                    # Decode line
                     decoded_line = line.decode('utf-8').strip()
 
-                    # 检查事件前缀
+                    # Check event prefix
                     if decoded_line.startswith("data:"):
                         event_data = decoded_line[5:].strip()
 
-                        # 检查是否是结束标记
+                        # Check if it's end marker
                         if event_data == "[DONE]":
-                            # 发送缓冲区中剩余的内容
+                            # Send remaining content in buffer
                             if content_buffer:
-                                # 逐字符发送剩余内容
+                                # Send remaining content character by character
                                 for char in content_buffer:
                                     if self.is_cancelled:
                                         break
                                     self.response_chunk.emit(char)
-                                    time.sleep(self.typing_speed)  # 添加延迟以实现打字机效果
+                                    time.sleep(self.typing_speed)  # Add delay for typewriter effect
                             break
                         
-                        # 尝试解析JSON
+                        # Try to parse JSON
                         try:
                             data = json.loads(event_data)
                             event_type = data.get("event")
                         
                             if event_type == "message":
-                                # 处理消息事件
+                                # Handle message event
                                 if not new_conversation_id and data.get("conversation_id"):
                                     new_conversation_id = data["conversation_id"]
                             
-                                # 检查是否是新的消息
+                                # Check if it's a new message
                                 message_id = data.get("id")
                                 if message_id != last_message_id:
-                                    # 发送上一条消息的剩余内容
+                                    # Send remaining content from previous message
                                     if content_buffer:
-                                        # 逐字符发送剩余内容
+                                        # Send remaining content character by character
                                         for char in content_buffer:
                                             if self.is_cancelled:
                                                 break
                                             self.response_chunk.emit(char)
-                                            time.sleep(self.typing_speed)  # 添加延迟以实现打字机效果
+                                            time.sleep(self.typing_speed)  # Add delay for typewriter effect
                                     content_buffer = ""
                                     last_message_id = message_id
                             
-                                # 获取增量内容
+                                # Get incremental content
                                 content = data.get("answer", "")
                                 if content:
-                                    # 逐字符发送（模拟打字机效果）
+                                    # Send character by character (simulate typewriter effect)
                                     for char in content:
                                         if self.is_cancelled:
                                             break
                                         self.response_chunk.emit(char)
-                                        time.sleep(self.typing_speed)  # 添加延迟以实现打字机效果
+                                        time.sleep(self.typing_speed)  # Add delay for typewriter effect
                             
-                            # 处理文件
+                            # Handle files
                             if "files" in data:
                                 for file_info in data["files"]:
                                     self.file_received.emit(file_info)
                             
                             elif event_type == "message_end":
-                                # 发送剩余内容并结束
+                                # Send remaining content and end
                                 if content_buffer:
                                     self.response_chunk.emit(content_buffer)
                                 break
                                 
                             elif event_type == "error":
-                                error_msg = data.get("message", "未知错误")
-                                self.error_occurred.emit(f"API错误: {error_msg}")
+                                error_msg = data.get("message", "unknown error")
+                                self.error_occurred.emit(f"API error: {error_msg}")
                                 break
                                 
                         except json.JSONDecodeError:
-                            print(f"JSON解析失败: {event_data}")
+                            print(f"JSON parsing failed: {event_data}")
                             continue
                     
-                    # 处理缓冲
+                    # Handle buffering
                     buffer += decoded_line
                     if buffer.startswith("data:") and not buffer.endswith("}"):
-                        continue  # 等待完整数据
+                        continue  # Wait for complete data
                     else:
-                        buffer = ""  # 重置缓冲区
+                        buffer = ""  # Reset buffer
 
             if not self.is_cancelled:
-                # 发送完整响应
+                # Send complete response
                 self.response_complete.emit(new_conversation_id or "", self.full_response)
 
         except Exception as e:
-            print(f"流式响应处理异常: {str(e)}")
-            self.error_occurred.emit(f"API调用错误: {str(e)}")
+            print(f"Streaming response processing exception: {str(e)}")
+            self.error_occurred.emit(f"API call error: {str(e)}")
 
     def _handle_blocking_response(self):
         try:
             result = self.client.chat_completion(self.message, self.conversation_id)
-            content = result.get("answer", "抱歉，我现在无法回答您的问题。")
+            content = result.get("answer", "Sorry, I cannot answer your question right now.")
             conversation_id = result.get("conversation_id", "")
 
             for char in content:
@@ -667,11 +658,7 @@ class EnhancedAIResponseThread(QThread):
                 self.response_complete.emit(conversation_id)
 
         except Exception as e:
-            self.error_occurred.emit(f"API调用错误: {str(e)}")
-
-    def cancel(self):
-        self.is_cancelled = True
-
+            self.error_occurred.emit(f"API call error: {str(e)}")
 
 class ChatHistoryManager:
     """Manage chat history storage and retrieval with auto-save support"""
@@ -687,7 +674,7 @@ class ChatHistoryManager:
                 json.dump([], f)
 
     def save_or_update_chat(self, chat_history, session_id=None, title=None):
-        """保存新聊天或更新现有聊天会话"""
+        """Save new chat or update existing chat session"""
         if not chat_history:
             return None
 
@@ -700,14 +687,14 @@ class ChatHistoryManager:
         if session_id:
             for i, chat_record in enumerate(history):
                 if chat_record.get('id') == session_id:
-                    # 保存文件路径信息
+                    # Save file path information
                     updated_messages = []
                     for msg in chat_history:
                         if "file_paths" in msg and msg["file_paths"]:
-                            # 只保存文件名，不保存完整路径
+                            # Only save filenames, not full paths
                             file_names = [os.path.basename(path) for path in msg["file_paths"]]
                             msg["file_info"] = file_names
-                            del msg["file_paths"]  # 删除路径信息
+                            del msg["file_paths"]  # Remove path information
                         updated_messages.append(msg)
                     
                     chat_record['messages'] = updated_messages
@@ -717,22 +704,22 @@ class ChatHistoryManager:
                         json.dump(history, f, ensure_ascii=False, indent=2)
                     return session_id
 
-        # 处理新会话
+        # Handle new session
         new_session_id = str(int(time.time() * 1000))
         
-        # 处理文件路径信息
+        # Process file path information
         processed_messages = []
         for msg in chat_history:
             if "file_paths" in msg and msg["file_paths"]:
-                # 只保存文件名，不保存完整路径
+                # Only save filenames, not full paths
                 file_names = [os.path.basename(path) for path in msg["file_paths"]]
                 msg["file_info"] = file_names
-                del msg["file_paths"]  # 删除路径信息
-            # 处理AI返回的文件
+                del msg["file_paths"]  # Remove path information
+            # Handle AI returned files
             if "files" in msg:
                 file_info = []
                 for file_data in msg["files"]:
-                    # 只保存必要的文件信息
+                    # Only save necessary file information
                     file_info.append({
                         "name": file_data.get("name", "unknown"),
                         "type": file_data.get("type", "file")
@@ -740,10 +727,10 @@ class ChatHistoryManager:
                 msg["files"] = file_info
             processed_messages.append(msg)
 
-        # 处理图片信息
+        # Process image information
         for msg in processed_messages:
             if msg["role"] == "assistant" and "images" in msg:
-                # 只保存文件名
+                # Only save filenames
                 msg["images"] = [os.path.basename(p) for p in msg["images"]]
                                  
         chat_record = {
@@ -755,7 +742,7 @@ class ChatHistoryManager:
         }
 
         history.insert(0, chat_record)
-        history = history[:50]  # 只保留最近的50条记录
+        history = history[:50]  # Only keep the latest 50 records
 
         with open(self.history_file, 'w', encoding='utf-8') as f:
             json.dump(history, f, ensure_ascii=False, indent=2)
@@ -790,10 +777,10 @@ class ChatHistoryManager:
 
 
 def process_uploaded_image(image_path):
-    """处理上传的图片"""
+    """Process uploaded image"""
     try:
         with Image.open(image_path) as img:
-            print(f"图片信息: {img.size}, {img.mode}")
+            print(f"Image info: {img.size}, {img.mode}")
 
             if img.size[0] > 1024 or img.size[1] > 1024:
                 img.thumbnail((1024, 1024), Image.Resampling.LANCZOS)
@@ -804,7 +791,7 @@ def process_uploaded_image(image_path):
             return image_path
 
     except Exception as e:
-        print(f"图片处理失败: {e}")
+        print(f"Image processing failed: {e}")
         return image_path
 
 
@@ -812,12 +799,12 @@ class MainWindow(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
         
-        # 添加客户端初始化
+        # Add client initialization
         config = APIConfig.load_config()
         api_key = config.get("dify_api_key", "")
         self.client = DifyAPIClient(api_key, user="travelmind_user") if api_key else None
         
-        # 初始化生成的图片列表
+        # Initialize generated images list
         self.generated_images = []
 
         # SET AS GLOBAL WIDGETS
@@ -841,11 +828,11 @@ class MainWindow(QMainWindow):
         # History manager
         self.history_manager = ChatHistoryManager()
 
-        # 新增：语音和图片相关变量
+        # New: voice and image related variables
         self.voice_thread = None
         self.is_voice_recording = False
         self.current_image_path = None
-        self.current_file_paths = []  # 存储多个文件路径
+        self.current_file_paths = []  # Store multiple file paths
         # USE CUSTOM TITLE BAR | USE AS "False" FOR MAC OR LINUX
         # ///////////////////////////////////////////////////////////////
         Settings.ENABLE_CUSTOM_TITLE_BAR = True
@@ -903,7 +890,7 @@ class MainWindow(QMainWindow):
         # History list selection change
         widgets.historyList.itemSelectionChanged.connect(self.onHistorySelectionChanged)
 
-        # 新增：设置语音和图片功能
+        # New: setup voice and image functionality
         self.setupSimpleVoiceAndImage()
 
         # Load history on startup
@@ -922,7 +909,7 @@ class MainWindow(QMainWindow):
         useCustomTheme = True
         self.useCustomTheme = useCustomTheme
         self.absPath = absPath
-        themeFile = "themes\\py_dracula_dark.qss"
+        themeFile = "themes/py_dracula_dark.qss"
 
         # SET THEME AND HACKS
         if useCustomTheme:
@@ -937,14 +924,16 @@ class MainWindow(QMainWindow):
         widgets.textEdit.setPlainText("")
 
 
-        # 修改为存储多个文件路径
-        self.current_file_paths = []  # 存储多个文件路径
+        # Modified to store multiple file paths
+        # Changed to store multiple file paths
         
-        # 添加文件预览布局
+        # Add file preview layout
+        # Added file preview layout
         self.filePreviewLayout = QHBoxLayout()
         widgets.chat_input_layout.insertLayout(0, self.filePreviewLayout)
         
-        # 存储当前对话生成的图片
+        # Store images generated during current conversation
+        # Store images generated during current conversation
         self.download_dir = os.path.join(os.getcwd(), "downloads")
         if not os.path.exists(self.download_dir):
             os.makedirs(self.download_dir)
@@ -954,18 +943,18 @@ class MainWindow(QMainWindow):
         self.setupHistoryListStyle()
 
     def setupHistoryListStyle(self):
-        """设置历史列表样式"""
-        # 设置列表整体样式
+        """Set chat history list style"""
+        # Set list overall style
         widgets.historyList.setStyleSheet("""
         QListWidget {
                 font-family: "Microsoft YaHei UI";
-                font-size: 16px;  /* 列表整体字体大小 */
+                font-size: 16px;  /* Overall list font size */
                 background-color: rgb(40, 44, 52);
                 border: none;
                 outline: none;
             }
             QListWidget::item {
-                padding: 14px 10px;  /* 增加内边距 */
+                padding: 14px 10px;  /* Increase padding */
                 border-bottom: 1px solid rgb(55, 59, 68);
             }
             QListWidget::item:selected {
@@ -977,7 +966,7 @@ class MainWindow(QMainWindow):
             }
     """)
         
-        # 设置按钮样式
+        # Set button style
         buttons = [
             widgets.loadChatButton, 
             widgets.deleteChatButton, 
@@ -985,12 +974,12 @@ class MainWindow(QMainWindow):
             ]
         
         for btn in buttons:
-            btn.setMinimumSize(140, 50)  # 增加按钮尺寸
+            btn.setMinimumSize(140, 50)  # Increase button size
             btn.setMaximumSize(180, 60)
             btn.setStyleSheet("""
                 QPushButton {
                     font-family: "Microsoft YaHei UI";
-                    font-size: 16px;  /* 按钮文字大小 */
+                    font-size: 16px;  /* Button text size */
                     font-weight: 500;
                     color: rgb(221, 221, 221);
                     background-color: rgb(68, 71, 90);
@@ -1012,16 +1001,16 @@ class MainWindow(QMainWindow):
             """)
 
     def init_dify_integration(self):
-            """初始化Dify集成"""
+            """Initialize Dify integration"""
             self.dify_conversation_id = None
             config = APIConfig.load_config()
             if not config.get("dify_api_key"):
                 QTimer.singleShot(2000, self.showFirstTimeSetup)
 
     def setupSimpleVoiceAndImage(self):
-        """设置简单的语音和图片功能"""
+        """Set up simple voice and image functionality"""
 
-        # 添加语音按钮
+        # Add voice button
         self.voiceButton = QPushButton()
         self.voiceButton.setObjectName("voiceButton")
         self.voiceButton.setMinimumSize(QSize(50, 80))
@@ -1043,13 +1032,13 @@ class MainWindow(QMainWindow):
             }
         """)
         self.voiceButton.setText("🎤")
-        self.voiceButton.setToolTip("按住录音")
+        self.voiceButton.setToolTip("Hold to record")
 
-        # 语音按钮事件
+        # Voice button events
         self.voiceButton.pressed.connect(self.startVoiceRecording)
         self.voiceButton.released.connect(self.stopVoiceRecording)
 
-        # 添加图片按钮
+        # Add image button
         self.imageButton = QPushButton()
         self.imageButton.setObjectName("imageButton")
         self.imageButton.setMinimumSize(QSize(50, 80))
@@ -1071,14 +1060,14 @@ class MainWindow(QMainWindow):
             }
         """)
         self.imageButton.setText("📷")
-        self.imageButton.setToolTip("上传图片")
+        self.imageButton.setToolTip("Upload image")
         self.imageButton.clicked.connect(self.selectImage)
 
-        # 将按钮添加到现有的输入布局中
+        # Add button to existing input layout
         widgets.input_horizontal_layout.insertWidget(1, self.voiceButton)
         widgets.input_horizontal_layout.insertWidget(2, self.imageButton)
 
-        # 添加图片预览标签
+        # Add image preview label
         self.imagePreview = QLabel()
         self.imagePreview.setObjectName("imagePreview")
         self.imagePreview.setMaximumSize(QSize(100, 80))
@@ -1091,11 +1080,11 @@ class MainWindow(QMainWindow):
                 text-align: center;
             }
         """)
-        self.imagePreview.setText("暂无图片")
+        self.imagePreview.setText("No image")
         self.imagePreview.setAlignment(Qt.AlignCenter)
         self.imagePreview.hide()
 
-        # 将图片预览添加到聊天输入布局上方
+        # Add image preview to chat input layout above
         widgets.chat_input_layout.insertWidget(0, self.imagePreview)
 
 
@@ -1120,21 +1109,21 @@ class MainWindow(QMainWindow):
             }
         """)
         self.fileButton.setText("📄📄📄📄")
-        self.fileButton.setToolTip("上传文件")
+        self.fileButton.setToolTip("Upload files")
         self.fileButton.clicked.connect(self.selectFiles)
         
-        # 将按钮添加到输入布局
+        # Add button to input layout
         widgets.input_horizontal_layout.insertWidget(3, self.fileButton)
 
     def startVoiceRecording(self):
-        """开始语音录制"""
+        """Start voice recording"""
         if self.is_voice_recording:
             return
 
-        print("🎤 开始录音...")
+        print("🎤 Start recording...")
         self.is_voice_recording = True
 
-        # 更新按钮样式
+        # Update button style
         self.voiceButton.setText("⏹️")
         self.voiceButton.setStyleSheet("""
             QPushButton {
@@ -1146,21 +1135,21 @@ class MainWindow(QMainWindow):
             }
         """)
 
-        # 创建并启动语音线程
+        # Create and start voice thread
         self.voice_thread = SimpleVoiceThread()
         self.voice_thread.voice_result.connect(self.handleVoiceResult)
         self.voice_thread.voice_error.connect(self.handleVoiceError)
         self.voice_thread.start_recording()
 
     def stopVoiceRecording(self):
-        """停止语音录制"""
+        """Stop voice recording"""
         if not self.is_voice_recording:
             return
 
-        print("⏹️ 停止录音...")
+        print("⏹️ Stop recording...")
         self.is_voice_recording = False
 
-        # 恢复按钮样式
+        # Restore button style
         self.voiceButton.setText("🎤")
         self.voiceButton.setStyleSheet("""
             QPushButton {
@@ -1179,10 +1168,10 @@ class MainWindow(QMainWindow):
             self.voice_thread.stop_recording()
 
     def handleVoiceResult(self, text):
-        """处理语音识别结果"""
-        print(f"✅ 语音识别成功: {text}")
+        """Handle voice recognition result"""
+        print(f"✅ Voice recognition successful: {text}")
 
-        # 将识别结果添加到输入框
+        # Add recognition result to input box
         current_text = widgets.chatInputArea.toPlainText()
         if current_text.strip():
             widgets.chatInputArea.setPlainText(current_text + " " + text)
@@ -1190,17 +1179,17 @@ class MainWindow(QMainWindow):
             widgets.chatInputArea.setPlainText(text)
 
     def handleVoiceError(self, error_msg):
-        """处理语音识别错误"""
-        print(f"❌ 语音识别失败: {error_msg}")
+        """Handle voice recognition error"""
+        print(f"❌ Voice recognition failed: {error_msg}")
 
     def selectImage(self):
-        """选择多个图片文件"""
+        """Select multiple image files"""
         file_dialog = QFileDialog()
         file_paths, _ = file_dialog.getOpenFileNames(
             self,
-            "选择图片",
+            "Select images",
             "",
-            "图片文件 (*.png *.jpg *.jpeg *.gif *.bmp);;所有文件 (*)"
+            "Image files (*.png *.jpg *.jpeg *.gif *.bmp);;All files (*)"
         )
 
         if file_paths:
@@ -1209,13 +1198,13 @@ class MainWindow(QMainWindow):
 
     
     def selectFiles(self):
-        """选择多个文件（任意类型）"""
+        """Select multiple files (any type)"""
         file_dialog = QFileDialog()
         file_paths, _ = file_dialog.getOpenFileNames(
             self,
-            "选择文件",
+            "Select files",
             "",
-            "所有文件 (*);;图片文件 (*.png *.jpg *.jpeg *.gif);;文档 (*.pdf *.doc *.docx *.txt)"
+            "All files (*);;Image files (*.png *.jpg *.jpeg *.gif);;Documents (*.pdf *.doc *.docx *.txt)"
         )
         
         if file_paths:
@@ -1223,16 +1212,16 @@ class MainWindow(QMainWindow):
             self.updateFilePreviews()
 
     def updateFilePreviews(self):
-        """更新文件预览区域"""
-        # 清除现有预览
+        """Update file preview area"""
+        # Clear existing previews
         self.clearFilePreviews()
         
-        # 添加新文件预览
+        # Add new file previews
         for file_path in self.current_file_paths:
             self.addFilePreview(file_path)
 
     def clearFilePreviews(self):
-        """清除所有文件预览"""
+        """Clear all file previews"""
         while self.filePreviewLayout.count():
             item = self.filePreviewLayout.takeAt(0)
             widget = item.widget()
@@ -1240,19 +1229,19 @@ class MainWindow(QMainWindow):
                 widget.deleteLater()
 
     def addFilePreview(self, file_path):
-        """添加文件预览"""
+        """Add file preview"""
         try:
             filename = os.path.basename(file_path)
             
-            # 创建预览容器
+            # Create preview container
             container = QWidget()
             container.setMaximumSize(100, 100)
             layout = QVBoxLayout(container)
             layout.setContentsMargins(2, 2, 2, 2)
             
-            # 根据文件类型显示不同预览
+            # Display different previews based on file type
             if self.client.is_image(file_path):
-                # 图片预览
+                # Image preview
                 pixmap = QPixmap(file_path)
                 if not pixmap.isNull():
                     scaled_pixmap = pixmap.scaled(80, 80, Qt.KeepAspectRatio, Qt.SmoothTransformation)
@@ -1260,41 +1249,39 @@ class MainWindow(QMainWindow):
                     preview.setPixmap(scaled_pixmap)
                     layout.addWidget(preview)
             else:
-                # 文件图标预览
+                # File icon preview
                 icon = QLabel("📄📄")
                 icon.setAlignment(Qt.AlignCenter)
                 icon.setStyleSheet("font-size: 24px;")
                 layout.addWidget(icon)
                 
-            # 文件名标签
+            # File name label
             name_label = QLabel(filename)
             name_label.setAlignment(Qt.AlignCenter)
             name_label.setStyleSheet("font-size: 15px;")
             name_label.setWordWrap(True)
             layout.addWidget(name_label)
             
-            # 删除按钮
+            # Delete button
             delete_btn = QPushButton("×")
             delete_btn.setFixedSize(20, 20)
             delete_btn.setStyleSheet("background-color: red; color: white; border-radius: 10px;")
             delete_btn.clicked.connect(lambda: self.removeFile(file_path))
             
-            # 添加到预览布局
+            # Add to preview layout
             self.filePreviewLayout.addWidget(container)
             
         except Exception as e:
-            print(f"文件预览失败: {e}")
+            print(f"File preview failed: {e}")
 
     def removeFile(self, file_path):
-        """移除文件"""
+        """Remove file"""
         if file_path in self.current_file_paths:
             self.current_file_paths.remove(file_path)
             self.updateFilePreviews()
 
-
-
     def showImagePreview(self, image_path):
-        """显示图片预览"""
+        """Show image preview"""
         try:
             pixmap = QPixmap(image_path)
             if not pixmap.isNull():
@@ -1307,28 +1294,28 @@ class MainWindow(QMainWindow):
                 self.imagePreview.setText("")
                 self.imagePreview.show()
 
-                # 双击清除
+                # Double click to clear
                 self.imagePreview.mouseDoubleClickEvent = lambda event: self.clearImagePreview()
 
             else:
-                self.imagePreview.setText("图片加载失败")
+                self.imagePreview.setText("Image loading failed")
 
         except Exception as e:
-            print(f"图片预览失败: {e}")
-            self.imagePreview.setText("预览失败")
+            print(f"Image preview failed: {e}")
+            self.imagePreview.setText("Preview failed")
 
     def clearImagePreview(self):
-        """清除图片预览"""
+        """Clear image preview"""
         self.current_image_path = None
         self.imagePreview.clear()
-        self.imagePreview.setText("暂无图片")
+        self.imagePreview.setText("No image")
         self.imagePreview.hide()
-        print("🗑️ 图片已清除")
+        print("🗑️ Image cleared")
 
     def addImageToChat(self, image_path):
-        """添加图片预览到聊天区域（不显示URL信息）"""
+        """Add image preview to chat area (without showing URL information)"""
         try:
-            # 创建图片容器
+            # Create image container
             container = QWidget()
             container.setObjectName("imageContainer")
             container.setStyleSheet("""
@@ -1343,51 +1330,36 @@ class MainWindow(QMainWindow):
             layout.setContentsMargins(4, 4, 4, 4)
             layout.setSpacing(8)
             
-            # 加载并缩放图片
+            # Load and scale image
             pixmap = QPixmap(image_path)
             if not pixmap.isNull():
-                # 设置最大尺寸
+                # Set maximum size
                 if pixmap.width() > 600 or pixmap.height() > 400:
                     pixmap = pixmap.scaled(300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation)
                 
-                # 创建图片标签
+                # Create image label
                 image_label = QLabel()
                 image_label.setPixmap(pixmap)
                 image_label.setAlignment(Qt.AlignCenter)
                 image_label.setStyleSheet("border: none;")
                 layout.addWidget(image_label)
                 
-                # 图片信息和控制面板
+                # Image info and control panel
                 control_frame = QFrame()
                 control_frame.setStyleSheet("background: transparent;")
                 control_layout = QHBoxLayout(control_frame)
                 
-                # 图片元数据
-                meta_label = QLabel(f"图片 {pixmap.width()}×{pixmap.height()}")
+                # Image metadata
+                meta_label = QLabel(f"Image {pixmap.width()}×{pixmap.height()}")
                 meta_label.setStyleSheet("color: #888; font-size: 12px;")
                 control_layout.addWidget(meta_label)
                 
-                # 操作按钮
+                # Action buttons
                 action_layout = QHBoxLayout()
                 action_layout.setSpacing(8)
                 
-                '''# 查看按钮
-                view_btn = QPushButton("查看图片")
-                view_btn.setFixedSize(90, 30)
-                view_btn.setStyleSheet("""
-                    QPushButton {
-                        background-color: #4CAF50;
-                        color: white;
-                        border-radius: 4px;
-                        font-size: 12px;
-                    }
-                    QPushButton:hover { background-color: #45a049; }
-                """)
-                view_btn.clicked.connect(lambda _, p=image_path: self.openImage(p))
-                action_layout.addWidget(view_btn)
-                '''
-                # 保存按钮
-                save_btn = QPushButton("另存为")
+                # Save button
+                save_btn = QPushButton("Save As")
                 save_btn.setFixedSize(90, 30)
                 save_btn.setStyleSheet("""
                     QPushButton {
@@ -1404,36 +1376,36 @@ class MainWindow(QMainWindow):
                 control_layout.addLayout(action_layout)
                 layout.addWidget(control_frame)
                 
-                # 添加到聊天区域
+                # Add to chat area
                 widgets.chatContentLayout.insertWidget(
                     widgets.chatContentLayout.count() - 1,
                     container
                 )
                 
-                # 滚动到底部
+                # Scroll to bottom
                 QTimer.singleShot(100, self.scrollToBottom)
             else:
-                print(f"无法加载图片: {image_path}")
+                print(f"Unable to load image: {image_path}")
                 
         except Exception as e:
-            print(f"添加图片到聊天失败: {str(e)}")
+            print(f"Failed to add image to chat: {str(e)}")
 
     def addFileToChat(self, file_path):
-        """添加文件预览到聊天界面"""
+        """Add file preview to chat interface"""
         try:
             filename = os.path.basename(file_path)
             
-            # 创建文件预览控件
+            # Create file preview widget
             file_widget = QWidget()
             file_layout = QHBoxLayout(file_widget)
             file_layout.setContentsMargins(10, 5, 10, 5)
             
-            # 文件图标
+            # File icon
             file_icon = QLabel("📄")
             file_icon.setStyleSheet("font-size: 24px;")
             file_layout.addWidget(file_icon)
             
-            # 文件信息
+            # File info
             file_info_widget = QWidget()
             file_info_layout = QVBoxLayout(file_info_widget)
             
@@ -1441,7 +1413,7 @@ class MainWindow(QMainWindow):
             file_name_label.setStyleSheet("font-weight: bold;")
             file_info_layout.addWidget(file_name_label)
             
-            download_btn = QPushButton("下载")
+            download_btn = QPushButton("Download")
             download_btn.setFixedSize(60, 25)
             download_btn.setStyleSheet("""
                 QPushButton {
@@ -1459,17 +1431,17 @@ class MainWindow(QMainWindow):
             
             file_layout.addWidget(file_info_widget)
             
-            # 添加到聊天区域
+            # Add to chat area
             layout = widgets.chatContentLayout
             layout.insertWidget(layout.count() - 1, file_widget)
             
             QTimer.singleShot(100, self.scrollToBottom)
             
         except Exception as e:
-            print(f"添加文件到聊天失败: {e}")
+            print(f"Failed to add file to chat: {e}")
 
     def openFile(self, file_path):
-        """打开下载的文件"""
+        """Open downloaded file"""
         try:
             if sys.platform == "win32":
                 os.startfile(file_path)
@@ -1478,10 +1450,10 @@ class MainWindow(QMainWindow):
             else:  # Linux
                 subprocess.call(["xdg-open", file_path])
         except Exception as e:
-            QMessageBox.warning(self, "打开失败", f"无法打开文件: {str(e)}")
+            QMessageBox.warning(self, "Open failed", f"Unable to open file: {str(e)}")
 
     def startChatFromHome(self):
-        """从主页跳转到对话页面"""
+        """Jump from home page to chat page"""
         widgets.stackedWidget.setCurrentWidget(widgets.ai_chat)
         UIFunctions.resetStyle(self, "btn_ai_chat")
         widgets.btn_ai_chat.setStyleSheet(UIFunctions.selectMenu(widgets.btn_ai_chat.styleSheet()))
@@ -1546,7 +1518,7 @@ class MainWindow(QMainWindow):
         widgets.deleteChatButton.setEnabled(has_selection)
 
     def loadSelectedChat(self):
-        """加载选中的聊天记录到AI聊天页面"""
+        """Load selected chat history to AI chat page"""
         selected_items = widgets.historyList.selectedItems()
         if not selected_items:
             return
@@ -1555,38 +1527,38 @@ class MainWindow(QMainWindow):
         if not isinstance(item, ChatHistoryItem):
             return
 
-        # 自动保存当前聊天（如果有）
+        # Auto save current chat (if any)
         if self.chat_history and self.auto_save_enabled:
             self.autoSaveCurrentChat()
 
-        # 加载选中的聊天记录
+        # Load selected chat history
         chat_data = item.chat_data
         self.chat_history = chat_data['messages'].copy()
         self.current_session_id = chat_data['id']
 
-        # 清空聊天界面
+        # Clear chat interface
         self.clearChatUI()
         
-        # 显示历史消息
+        # Display historical messages
         for message in self.chat_history:
             is_user = message['role'] == 'user'
             content = message['content']
             
-            # 显示消息内容
+            # Display message content
             self.addChatMessage(content, is_user=is_user)
-            # 如果有图片信息，显示图片
+            # If there's image info, display images
             if not is_user and "images" in message:
                 for image_filename in message["images"]:
                     image_path = os.path.join(self.download_dir, image_filename)
                     if os.path.exists(image_path):
                         self.addImageToChat(image_path)
-            # 如果有文件信息，显示文件
+            # If there's file info, display files
             if "file_info" in message:
                 files_str = ", ".join(message["file_info"])
                 if is_user:
-                    file_message = f"📎📎 已上传文件: {files_str}"
+                    file_message = f"📎📎 Uploaded files: {files_str}"
                 else:
-                    file_message = f"📎📎 包含文件: {files_str}"
+                    file_message = f"📎📎 Contains files: {files_str}"
                 
                 file_widget = QLabel(file_message)
                 file_widget.setStyleSheet("""
@@ -1603,14 +1575,14 @@ class MainWindow(QMainWindow):
                 layout = widgets.chatContentLayout
                 layout.insertWidget(layout.count() - 1, file_widget)
             
-            # 如果有AI返回的文件，显示文件
+            # If there are AI returned files, display files
             if "files" in message:
                 for file_info in message["files"]:
                     file_name = file_info.get("name", "unknown")
                     file_type = file_info.get("type", "file")
                     
-                    # 创建文件占位符
-                    file_placeholder = QLabel(f"📄 {file_name} (已下载)")
+                    # Create file placeholder
+                    file_placeholder = QLabel(f"📄 {file_name} (Downloaded)")
                     file_placeholder.setStyleSheet("""
                         QLabel {
                             color: #3498db;
@@ -1625,7 +1597,7 @@ class MainWindow(QMainWindow):
                     layout = widgets.chatContentLayout
                     layout.insertWidget(layout.count() - 1, file_placeholder)
 
-        # 切换到聊天页面
+        # Switch to chat page
         widgets.stackedWidget.setCurrentWidget(widgets.ai_chat)
         UIFunctions.resetStyle(self, "btn_ai_chat")
         widgets.btn_ai_chat.setStyleSheet(UIFunctions.selectMenu(widgets.btn_ai_chat.styleSheet()))
@@ -1725,116 +1697,110 @@ class MainWindow(QMainWindow):
             self.typing_indicator = None
 
     def sendMessage(self):
-        """发送消息（支持文本、图片和文件）"""
+        """Send message (supports text, images, and files)"""
         message = widgets.chatInputArea.toPlainText().strip()
     
-        # 如果没有消息也没有文件，则不发送
+        # If no message and no files, don't send
         if not message and not self.current_file_paths:
             return
     
-        # 获取配置
+        # Get configuration
         config = APIConfig.load_config()
         api_key = config.get("dify_api_key", "")
     
-        # 清空输入框和文件预览
+        # Clear input box and file preview
         widgets.chatInputArea.clear()
-        file_paths = self.current_file_paths.copy()  # 使用副本，避免在后续操作中被修改
+        file_paths = self.current_file_paths.copy()  # Use copy to avoid modification in subsequent operations
         self.current_file_paths = []
         self.clearFilePreviews()
     
-        # 禁用发送按钮
+        # Disable send button
         widgets.sendButton.setEnabled(False)
         widgets.sendButton.setText("Sending...")
     
-        # 构建用户消息内容（包含所有文件信息）
+        # Build user message content (including all file info)
         file_messages = []
         combined_message = message
     
-        # 处理所有文件（图片和非图片）
+        # Process all files (images and non-images)
         for file_path in file_paths:
-            # 在聊天界面显示文件
+            # Display files in chat interface
             if self.client.is_image(file_path):
                 self.addImageToChat(file_path)
-                file_message = f"[图片: {os.path.basename(file_path)}]"
+                file_message = f"[Image: {os.path.basename(file_path)}]"
             else:
-                self.addFileToChat(file_path)  # 添加文件预览方法
-                file_message = f"[文件: {os.path.basename(file_path)}]"
+                self.addFileToChat(file_path) # Add file preview method
+                file_message = f"[File: {os.path.basename(file_path)}]"
         
             file_messages.append(file_message)
     
-        # 如果有文件信息，添加到消息中
+        # If there's file info, add to message
         if file_messages:
             files_str = "\n".join(file_messages)
             if message:
                 combined_message = f"{message}\n{files_str}"
             else:
                 combined_message = files_str
-                message = "请分析这些文件" if len(file_messages) > 1 else "请分析这个文件"
+                message = "Please analyze these files" if len(file_messages) > 1 else "Please analyze this file"
     
-        # 添加用户消息到聊天历史
+        # Add user message to chat history
         self.chat_history.append({
         "role": "user",
         "content": combined_message,
-        # 保存文件路径信息，以便在历史记录中加载
+        # Save file path info for loading in history
         "file_paths": file_paths if file_paths else None
         })
     
-        # 在聊天界面显示用户消息
+        # Display user message in chat interface
         self.addChatMessage(combined_message, is_user=True)
     
-        # 创建AI消息用于流式显示
+        # Create AI message for streaming display
         self.current_ai_message = self.addChatMessage("", is_user=False, streaming=True)
         
-        # 开始光标闪烁
+        # Start cursor blinking
         self.startCursorBlink()
         
-        # 创建并启动AI响应线程
+        # Create and start AI response thread
         self.ai_thread = EnhancedAIResponseThread(
-            message,  # 原始文本消息
+            message,  # Original text message
             api_key if api_key else None,
             file_paths=file_paths,
             conversation_id=getattr(self, 'dify_conversation_id', None),
             stream=config.get("stream_enabled", True),
-            typing_speed=config.get("typing_speed", 0.03)  # 添加打字速度配置
+            typing_speed=config.get("typing_speed", 0.03)  # Add typing speed configuration
         )
         
-        # 连接信号
+        # Connect signals
         self.ai_thread.response_chunk.connect(self.handleStreamingChunk)
         self.ai_thread.response_complete.connect(self.handleDifyResponseComplete)
         self.ai_thread.error_occurred.connect(self.handleAPIError)
         self.ai_thread.file_received.connect(self.handleFileReceived)
         
         self.ai_thread.start()
-    
-#    def handleStreamingChunk(self, chunk):
-#        """处理流式响应的每个数据块"""
-#        if self.current_ai_message:
-#            self.current_ai_message.appendText(chunk)
-#            self.scrollToBottom()
 
     def showUploadProgress(self, current, total):
-        """显示文件上传进度"""
+        """Show file upload progress"""
         if total > 0:
             percent = int(current * 100 / total)
-            widgets.sendButton.setText(f"上传中... {percent}%")
+            widgets.sendButton.setText(f"Uploading... {percent}%")
     
     def handleFileReceived(self, file_info):
-        """处理接收到的文件"""
+        """Handle received files"""
         try:
             file_name = file_info.get("name", "unknown_file")
             file_url = file_info.get("url", "")
             file_type = file_info.get("type", "file")
             
             if not file_url:
-                print("文件URL无效")
+                print("Invalid file URL")
                 return
                 
-            # 创建下载目录
+            # Create download directory
             download_dir = os.path.join(os.getcwd(), "downloads")
             if not os.path.exists(download_dir):
                 os.makedirs(download_dir)
                 
-            # 下载文件
+            # Download file
             file_path = os.path.join(download_dir, file_name)
             response = requests.get(file_url, stream=True)
             
@@ -1844,23 +1810,23 @@ class MainWindow(QMainWindow):
                         if chunk:
                             f.write(chunk)
                 
-                print(f"文件下载成功: {file_path}")
+                print(f"File download successful: {file_path}")
                 
-                # 在聊天界面显示文件
+                # Display file in chat interface
                 if file_type == "image":
                     self.addImageToChat(file_path)
                 else:
                     self.addFileToChat(file_path)
                     
-                # 添加到聊天历史
+                # Add to chat history
                 if self.current_ai_message:
                     self.chat_history[-1]["files"] = self.chat_history[-1].get("files", []) + [file_info]
                     
             else:
-                print(f"文件下载失败: {response.status_code}")
+                print(f"File download failed: {response.status_code}")
                 
         except Exception as e:
-            print(f"处理文件失败: {e}")
+            print(f"File processing failed: {e}")
 
     def handleStreamingChunk(self, char):
         """Handle each character from streaming response"""
@@ -1869,26 +1835,26 @@ class MainWindow(QMainWindow):
             self.scrollToBottom()
 
     def remove_image_urls(self, content, image_urls):
-        """彻底清除所有图片相关的HTML标签和URL片段"""
+        """Completely remove all image-related HTML tags and URL fragments"""
         if not content:
             return content
         
         clean_content = content
     
-        # 第一步：移除所有HTML图片标签
+        # Step 1: Remove all HTML image tags
         clean_content = re.sub(r'<img[^>]*>', '', clean_content)
     
-        # 第二步：移除所有图片URL（包括部分和不完整URL）
+        # Step 2: Remove all image URLs (including partial and incomplete URLs)
         for url in image_urls:
-            # 移除完整URL
+            # Remove complete URL
             clean_content = clean_content.replace(url, '')
         
-            # 移除URL的部分片段（针对截图中的错误格式）
+            # Remove URL fragments (for error formats in screenshots)
             base_url = url.split("?")[0].split("%")[0]
             if base_url and base_url in clean_content:
                 clean_content = clean_content.replace(base_url, '')
     
-        # 第三步：清理特殊错误格式
+        # Step 3: Clean special error formats
         patterns_to_remove = [
         r'%!F$MISSING$', 
         r'%!s$MISSING$', 
@@ -1901,42 +1867,40 @@ class MainWindow(QMainWindow):
         for pattern in patterns_to_remove:
             clean_content = re.sub(pattern, '', clean_content)
     
-        
-    
         return clean_content.strip()
 
     def handleDifyResponseComplete(self, conversation_id, full_text=None):
-        """处理Dify响应完成"""
+        """Handle Dify response completion"""
         self.stopCursorBlink()
         
-        # 更新会话ID
+        # Update session ID
         self.dify_conversation_id = conversation_id or self.dify_conversation_id
         
-        # 保存到聊天历史
+        # Save to chat history
         if self.current_ai_message:
             original_content = self.current_ai_message.current_text
             
             try:
-                # 提取图片URL
+                # Extract image URLs
                 image_urls = self.client.extract_image_urls(original_content) if self.client else []
-                print("提取到的图片URL:")
+                print("Extracted image URLs:")
                 for i, url in enumerate(image_urls):
                     print(f"{i+1}. {url}")
-                # 下载图片
+                # Download images
                 if image_urls:
                     self.download_images(image_urls)
                 
-                # 创建不含图片URL的纯净文本
+                # Create clean text without image URLs
                 clean_content = self.remove_image_urls(original_content, image_urls) if original_content else ""
                 
-                # 如果内容为空但生成了图片，使用默认文本
+                # If content is empty but images were generated, use default text
                 if not clean_content.strip() and image_urls:
-                    clean_content = "已生成行程图片"
+                    clean_content = "Generated travel images"
                 
-                # 更新消息内容
+                # Update message content
                 self.current_ai_message.setText(clean_content)
                 
-                # 保存到聊天历史
+                # Save to chat history
                 self.chat_history.append({
                     "role": "assistant",
                     "content": clean_content,
@@ -1944,25 +1908,25 @@ class MainWindow(QMainWindow):
                 })
                 
             except Exception as e:
-                print(f"处理AI响应时出错: {str(e)}")
-                self.current_ai_message.setText("处理响应时出错，请检查API配置")
+                print(f"Error processing AI response: {str(e)}")
+                self.current_ai_message.setText("Error processing response, please check API configuration")
                 self.chat_history.append({
                     "role": "assistant",
-                    "content": "处理响应时出错，请检查API配置"
+                    "content": "Error processing response, please check API configuration"
                 })
                 
             finally:
-                # 重置图片列表
+                # Reset image list
                 self.generated_images.clear()
         
-        # 保存会话
+        # Save session
         if self.dify_conversation_id:
             self.history_manager.save_or_update_chat(
                 self.chat_history,
                 self.dify_conversation_id
             )
         
-        # 恢复发送按钮
+        # Restore send button
         widgets.sendButton.setEnabled(True)
         widgets.sendButton.setText("Send")
         self.ai_thread = None
@@ -1970,91 +1934,84 @@ class MainWindow(QMainWindow):
 
     def process_response_content(self, original_content, image_urls):
         """
-        处理响应内容：
-        1. 下载图片并显示
-        2. 从文本中完全移除图片URL
+        Process response content:
+        1. Download and display images
+        2. Completely remove image URLs from text
         """
-        # 下载图片
+        # Download images
         self.download_images(image_urls)
     
-        # 创建一个新的清理后的内容，只保留非图片部分
+        # Create new cleaned content, only keep non-image parts
         clean_content = original_content
     
-        # 移除所有图片URL
+        # Remove all image URLs
         for url in image_urls:
-            # 移除Markdown格式的图片
+            # Remove Markdown format images
             clean_content = re.sub(rf'!$$.*?$$${re.escape(url)}$', '', clean_content)
-            # 移除HTML img标签
+            # Remove HTML img tags
             clean_content = re.sub(rf'', '', clean_content)
-            # 移除裸URL
+            # Remove bare URLs
             clean_content = clean_content.replace(url, '')
     
-        # 移除空行和多余空格
-        clean_content = re.sub(r'\n\s*\n', '\n\n', clean_content).strip()
+        # Remove empty lines and extra spaces
+        clean_content = re.sub(r'\n\s*\n', '\n\n', clean_content).strip();
     
-        # 如果内容完全为空，显示默认消息
+        # If content is completely empty, show default message
         if not clean_content:
-            clean_content = "已生成相关图片" if image_urls else "无文本内容"
+            clean_content = "Generated related images" if image_urls else "No text content"
     
         return clean_content
     
     def remove_url_placeholders(self, message_text, image_urls):
-        """从消息文本中移除URL占位文本"""
-        # 创建URL正则模式
+        """Remove URL placeholder text from message text"""
+        # Create URL regex patterns
         url_patterns = [
-            r's\s*=\s*[\'\"](https?://[^\s\'\"]+)[\'\"]',      # s="URL" 格式
-            r'image_url\s*:\s*[\'\"](https?://[^\s\'\"]+)[\'\"]',  # image_url:"URL" 格式
-            r'url\s*:\s*(https?://\S+)',                     # url: URL 格式
-            r'一个url\s*：\s*(https?://\S+)',                  # 一个url：中文格式
+            r's\s*=\s*[\'\"](https?://[^\s\'\"]+)[\'\"]',      # s="URL" format
+            r'image_url\s*:\s*[\'\"](https?://[^\s\'\"]+)[\'\"]',  # image_url:"URL" format
+            r'url\s*:\s*(https?://\S+)',                     # url: URL format
+            r'a url\s*：\s*(https?://\S+)',                  # a url: format
         ]
         
         clean_text = message_text
-        # 移除所有URL模式
+        # Remove all URL patterns
         for pattern in url_patterns:
             clean_text = re.sub(pattern, '', clean_text)
         
-        # 移除代码段注释（示例代码中提供的代码片段）
+        # Remove code block comments (code snippets provided in example code)
         code_blocks = re.findall(r'```python[\s\S]+?```', clean_text, re.DOTALL)
         for code_block in code_blocks:
             if "req.get" in code_block or "open(" in code_block:
                 clean_text = clean_text.replace(code_block, '')
         
-        # 如果整条消息都是URL，则完全移除
+        # If entire message is URL, remove completely
         if clean_text.strip() in image_urls:
-            clean_text = "已生成图片" if image_urls else ""
+            clean_text = "Generated images" if image_urls else ""
         
-        # 更新消息显示
+        # Update message display
         self.current_ai_message.setText(clean_text.strip())
     
     def download_images(self, image_urls):
-        """更可靠的图片下载方法"""
+        """More reliable image download method"""
         if not image_urls:
             return
         
-        # 确保下载目录存在
+        # Ensure download directory exists
         download_dir = os.path.join("downloads", "images")
         os.makedirs(download_dir, exist_ok=True)
     
         for i, url in enumerate(image_urls):
             try:
-                # 清理URL中的特殊格式
+                # Clean special formats in URL
                 url = url.replace('%!F(MISSING)', '/').replace('%!F', '/')
             
-                # 获取文件名
+                # Get filename
                 filename = os.path.basename(url.split("?")[0])
                 if not filename:
                     filename = f"image_{int(time.time())}_{i}.png"
                 
                 file_path = os.path.join(download_dir, filename)
             
-                '''# 添加阿里云OSS域名（如果缺少）
-                if "oss-cn-shanghai.aliyuncs.com" not in url:
-                    path = urlparse(url).path
-                    oss_url = f"https://sc-maas.oss-cn-shanghai.aliyuncs.com{path}"
-                else:
-                    oss_url = url'''
-                
-                # 下载图片
+                # Download image
                 response = requests.get(url, stream=True, timeout=30)
             
                 if response.status_code == 200:
@@ -2062,32 +2019,31 @@ class MainWindow(QMainWindow):
                         for chunk in response.iter_content(chunk_size=8192):
                             f.write(chunk)
 
-                    print(f"图片保存到: {file_path}")
+                    print(f"Image saved to: {file_path}")
                     self.addImageToChat(file_path)
                     self.generated_images.append(file_path)
                 else:
-                    print(f"图片下载失败: {url} - 状态码 {response.status_code}")
+                    print(f"Image download failed: {url} - Status code {response.status_code}")
                 
             except Exception as e:
-                print(f"图片处理错误: {str(e)}")
-
+                print(f"Image processing error: {str(e)}")
 
     def handleAPIError(self, error_message):
-        """处理API错误"""
+        """Handle API errors"""
         self.stopCursorBlink()
 
-        # 显示详细的错误信息
+        # Display detailed error information
         error_dialog = QMessageBox(self)
         error_dialog.setIcon(QMessageBox.Critical)
-        error_dialog.setWindowTitle("API错误")
-        error_dialog.setText("处理API请求时出错")
+        error_dialog.setWindowTitle("API Error")
+        error_dialog.setText("Error processing API request")
         error_dialog.setInformativeText(error_message)
-        error_dialog.setDetailedText("详细技术信息:\n" + traceback.format_exc())
+        error_dialog.setDetailedText("Detailed technical information:\n" + traceback.format_exc())
         error_dialog.exec()
         
-        # 恢复UI状态
+        # Restore UI state
         if self.current_ai_message:
-            self.current_ai_message.setText(f"❌❌ API错误: {error_message}")
+            self.current_ai_message.setText(f"❌❌ API Error: {error_message}")
 
         widgets.sendButton.setEnabled(True)
         widgets.sendButton.setText("Send")
@@ -2129,18 +2085,18 @@ class MainWindow(QMainWindow):
         self.sendMessage()
 
     def clearChat(self):
-        """清除对话"""
+        """Clear conversation"""
         self.dify_conversation_id = None
         self.startNewChat()
 
     def showFirstTimeSetup(self):
-        """首次使用设置提示"""
+        """First-time setup prompt"""
         reply = QMessageBox.question(
             self,
             "Welcome to TravelMind",
-            "您还未配置Dify API密钥。\n\n"
-            "配置后即可使用AI助手功能，否则将使用测试模式。\n\n"
-            "是否现在配置？",
+            "You haven't configured the Dify API key yet.\n\n"
+            "After configuration, you can use AI assistant features, otherwise test mode will be used.\n\n"
+            "Configure now?",
             QMessageBox.Yes | QMessageBox.No
         )
 
@@ -2148,9 +2104,9 @@ class MainWindow(QMainWindow):
             self.showAPISettings()
 
     def openImage(self, image_path):
-        """使用系统默认应用打开图片"""
+        """Open image with system default application"""
         if not os.path.exists(image_path):
-            self.showWarning("图片文件不存在", f"找不到图片文件: {image_path}")
+            self.showWarning("Image file does not exist", f"Cannot find image file: {image_path}")
             return
             
         try:
@@ -2161,28 +2117,28 @@ class MainWindow(QMainWindow):
             else:  # Linux
                 subprocess.call(["xdg-open", image_path])
         except Exception as e:
-            self.showWarning("打开失败", f"无法打开图片: {str(e)}")
+            self.showWarning("Open failed", f"Unable to open image: {str(e)}")
     
     def saveImage(self, image_path):
-        """保存图片到指定位置"""
+        """Save image to specified location"""
         if not os.path.exists(image_path):
-            self.showWarning("文件不存在", "无法找到图片文件")
+            self.showWarning("File does not exist", "Cannot find image file")
             return
             
-        file_filter = "图片文件 (*.png *.jpg *.jpeg *.gif)"
+        file_filter = "Image files (*.png *.jpg *.jpeg *.gif)"
         save_path, _ = QFileDialog.getSaveFileName(
-            self, "保存图片", "", file_filter
+            self, "Save image", "", file_filter
         )
         
         if save_path:
             try:
                 shutil.copy2(image_path, save_path)
-                self.showInfo("保存成功", "图片已成功保存")
+                self.showInfo("Save successful", "Image saved successfully")
             except Exception as e:
-                self.showWarning("保存失败", f"无法保存图片: {str(e)}")
+                self.showWarning("Save failed", f"Unable to save image: {str(e)}")
 
     def showAPISettings(self):
-        """显示API设置对话框"""
+        """Show API settings dialog"""
         dialog = APISettingsDialog(self)
         if dialog.exec() == QDialog.Accepted:
             self.dify_conversation_id = None
@@ -2303,7 +2259,7 @@ class MainWindow(QMainWindow):
 
 
 class APISettingsDialog(QDialog):
-    """API设置对话框"""
+    """API settings dialog"""
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -2372,14 +2328,14 @@ class APISettingsDialog(QDialog):
         self.cancel_button.clicked.connect(self.reject)
 
     def togglePasswordVisibility(self):
-        """切换密码可见性"""
+        """Toggle password visibility"""
         if self.api_key_edit.echoMode() == QLineEdit.Password:
             self.api_key_edit.setEchoMode(QLineEdit.Normal)
         else:
             self.api_key_edit.setEchoMode(QLineEdit.Password)
 
     def loadSettings(self):
-        """加载设置"""
+        """Load settings"""
         config = APIConfig.load_config()
         self.api_key_edit.setText(config.get("dify_api_key", ""))
         self.base_url_edit.setText(config.get("dify_base_url", "https://api.dify.ai/v1"))
@@ -2387,7 +2343,7 @@ class APISettingsDialog(QDialog):
         self.speed_spinbox.setValue(int(config.get("typing_speed", 0.03) * 1000))
 
     def testConnection(self):
-        """测试API连接"""
+        """Test API connection"""
         api_key = self.api_key_edit.text().strip()
         base_url = self.base_url_edit.text().strip() or "https://api.dify.ai/v1"
 
@@ -2400,7 +2356,7 @@ class APISettingsDialog(QDialog):
 
         try:
             client = DifyAPIClient(api_key, base_url)
-            # 使用非流式请求进行测试
+            # Use non-streaming request for testing
             test_data = {
                 "inputs": {},
                 "query": "Hello",
@@ -2417,10 +2373,10 @@ class APISettingsDialog(QDialog):
             if response.status_code == 200:
                 QMessageBox.information(self, "Success", "API connection test successful!")
             else:
-                error_msg = f"API返回错误 ({response.status_code}): "
+                error_msg = f"API return error ({response.status_code}): "
                 try:
                     error_data = response.json()
-                    error_msg += error_data.get("message", "未知错误")
+                    error_msg += error_data.get("message", "Unknown error")
                     if "detail" in error_data:
                         error_msg += f" - {error_data['detail']}"
                 except:
@@ -2428,13 +2384,12 @@ class APISettingsDialog(QDialog):
                 QMessageBox.critical(self, "Error", error_msg)
                 
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"API连接测试失败:\n{str(e)}")
+            QMessageBox.critical(self, "Error", f"API connection test failed:\n{str(e)}")
         finally:
             self.test_button.setEnabled(True)
             self.test_button.setText("Test Connection")
 
     def saveSettings(self):
-        """保存设置"""
         config = {
             "dify_api_key": self.api_key_edit.text().strip(),
             "dify_base_url": self.base_url_edit.text().strip() or "https://api.dify.ai/v1",
@@ -2445,10 +2400,3 @@ class APISettingsDialog(QDialog):
         APIConfig.save_config(config)
         QMessageBox.information(self, "Success", "Settings saved successfully!")
         self.accept()
-
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    app.setWindowIcon(QIcon("icon.ico"))
-    window = MainWindow()
-    sys.exit(app.exec())

@@ -1,5 +1,9 @@
-#### Interface based on PyDracula - Modern GUI PySide6 / PyQt6
+## TravelMind --- An AI-powered Travel Assistant
 
-https://github.com/Wanderson-Magalhaes/Modern_GUI_PyDracula_PySide6_or_PyQt6
+#### The Interface is based on PyDracula - Modern GUI PySide6 / PyQt6<br>https://github.com/Wanderson-Magalhaes/Modern_GUI_PyDracula_PySide6_or_PyQt6
 
-运行时保证所需库都已添加，cmd定位到文件夹位置,执行命令python main.py即可运行
+### Usage:
+
+1. Install all python modules from **requirements.txt**
+2. Update your API key in **api_config.json**
+3. Run **main.py** and enjoy!
