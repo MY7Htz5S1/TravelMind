@@ -1,21 +1,8 @@
-
-# TravelMind AI助手 - 必需依赖
-# 安装: pip install -r requirements.txt
-
-# GUI框架
 PySide6>=6.4.0
-
-# 网络和API
 requests>=2.31.0
 sseclient-py>=1.7.2
-
-# AI语音识别
 openai-whisper>=20240930
 SpeechRecognition>=3.14.0
 pyaudio>=0.2.11
-
-# 图像处理
 Pillow>=10.0.0
-
-# 数据处理
 numpy>=1.24.0
